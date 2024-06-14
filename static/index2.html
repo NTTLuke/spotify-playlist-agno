@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Login Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f7;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 90%;
+            align-content: center;
+            background-color: #fff;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
+            white-space: normal;
+            text-align: center;
+        }
+
+        p {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        textarea {
+            width: calc(100% - 24px);
+            height: 150px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 2em;
+        }
+
+        button {
+            background-color: #1db954;
+            color: #fff;
+            padding: 14px 20px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #1ed760;
+        }
+
+
+        @keyframes bassEffect {
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(1.05);
+            }
+
+            50% {
+                transform: scale(1);
+            }
+
+            75% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        #statusMessage {
+            font-size: 1.1em;
+            color: #555;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        #statusMessage img {
+            display: block;
+            margin: 0 auto;
+            animation: bassEffect 2s infinite;
+
+        }
+
+        #statusMessage div {
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            font-size: 1.5em;
+            color: #FF5733;
+            margin-top: 10px;
+            animation: bassEffect 0.5s infinite;
+
+
+        }
+
+        /* #statusMessage {
+            font-size: 1.1em;
+            color: #555;
+            margin-top: 20px;
+            /* display: none; */
+        /* } */
+
+        */ #loginBtn {
+            background-color: #000;
+            color: #fff;
+            border-radius: 30px;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            border: 2px solid #000;
+            transition: background-color 0.3s ease;
+        }
+
+        #loginBtn:hover {
+            background-color: #fff;
+            color: #000;
+        }
+
+        #loginBtn i {
+            margin-right: 10px;
+        }
+
+        .bubble-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bubble-button {
+            padding: 34px 20px;
+            border: none;
+            border-radius: 14px;
+            background-color: #af09e1;
+            color: white;
+            font-size: 21px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .bubble-button:hover {
+            background-color: #ff3b30;
+        }
+
+        .bubble-button:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(255, 107, 97, 0.5);
+        }
+
+        .header-image {
+            display: block;
+            margin: 0 auto 15px;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="loginSection">
+        <h2>Music Lover Assistant</h2>
+        <button id="loginBtn"><i class="fab fa-spotify"></i>Login with Spotify</button>
+        <p>(only premium accounts)</p>
+    </div>
+
+    <div class="container" id="formSection">
+
+        <!-- <img src="./OIG3.jpg" alt="Spotify Playlist" class="header-image"> -->
+        <h2>Music Lover Assistant</br>with <a href="https://github.com/phidatahq/phidata" target="_blank">Phidata</a>
+        </h2>
+
+        <label for="bubble-buttons"> Quick Suggestions: </label>
+        <div class="bubble-buttons">
+            <!-- <div style="align-content: center;">
+                <img src="img/img1.jpg" alt="Loading" width="800" height="400">
+            </div> -->
+            <button class="bubble-button"
+                data-text="I want to dance. I love 80s pop music, and I'm feeling a bit down today. So, I need a playlist that can cheer me up.">Fun
+                Dance 80s</button>
+            <button class="bubble-button" data-text="Give me the 5 most listened-to EDM songs in 2023.">(Step 1) 5 Most
+                listened
+                EDM songs 2023</button>
+            <button class="bubble-button" data-text="Great! Please create a playlist using these songs">(Step 2) Create
+                a playlist using prev songs.</button>
+            <button class="bubble-button" data-text="Give me the list of the first 5 playlists on my spotify account">5
+                Personal Saved playlists on Spotify</button>
+        </div>
+        <textarea id="textarea1"
+            placeholder="Describe yourself, your preferences or something you have in mind (e.g., favorite music genre, current mood, activity, wanna do)"
+            rows="6"></textarea>
+        <button id="submitBtn">Let's do!</button>
+        <div id="statusMessage">
+            <!-- -->
+            <div>I'm working ...</div>
+        </div>
+        <pre id="result"></pre>
+        <div id="response"></div>
+
+
+        <div>
+            <p> Setup instructions here: <a href="https://github.com/NTTLuke/spotify-playlist-phidata"
+                    target="_blank">README</a></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        window.onload = function () {
+            if (window.location.hash.toLowerCase() === "#showform") {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('formSection').style.display = 'block';
+            } else {
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('formSection').style.display = 'none';
+            }
+        };
+
+        document.getElementById('loginBtn').onclick = function () {
+            window.location.href = '/login'; // Redirect to initiate the OAuth flow
+        };
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        document.getElementById('submitBtn').onclick = async function () {
+
+            // Read the cookie
+            const spotyAccessToken = getCookie('accessToken');
+            if (!spotyAccessToken) {
+                alert('Please login with Spotify first');
+                return;
+            }
+
+            let textInfo = document.getElementById('textarea1').value;
+            const responseElement = document.getElementById('response');
+            responseElement.innerHTML = '';  // Clear previous responses
+
+            if (!textInfo.trim()) {
+                alert('Fill the text');
+                return;
+            }
+
+            this.disabled = true;
+            let statusMessageDiv = document.getElementById('statusMessage');
+            let selectedDevice = document.querySelector('input[name="device"]:checked');
+            let selectedModel = document.querySelector('input[name="model"]:checked');
+
+            statusMessageDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'accept': 'application/json',
+                        'X-SPOTIFY-REFRESH-TOKEN': spotyAccessToken
+                    },
+                    body: JSON.stringify({
+                        message: textInfo,
+                        assistant: "SPOTIFY_PLAYLIST"
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let result;
+
+                let content = '';
+
+                while (!(result = await reader.read()).done) {
+                    const chunk = decoder.decode(result.value || new Uint8Array(), { stream: !result.done });
+                    content += chunk;
+                    responseElement.innerHTML = marked.parse(content); // Assuming you have an element with id 'result'
+                }
+            } catch (error) {
+                statusMessageDiv.innerText = 'Error: ' + error.message;
+                responseElement.innerHTML = 'Error: ' + error.message;
+
+            } finally {
+                document.getElementById('submitBtn').disabled = false;
+                statusMessageDiv.style.display = 'none';
+            }
+        };
+
+        document.querySelectorAll('.bubble-button').forEach(button => {
+            button.onclick = function () {
+                document.getElementById('textarea1').value = this.getAttribute('data-text');
+            };
+        });
+    </script>
+</body>
+
+
+</html>
