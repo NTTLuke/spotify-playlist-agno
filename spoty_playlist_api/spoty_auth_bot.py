@@ -60,7 +60,7 @@ def callback(code: str, state: str, request: Request, response: Response):
     # Clean up the state
     del user_states[state]
 
-    return RedirectResponse(url="https://yourfrontend.com/success")
+    return RedirectResponse(url="http://localhost:8000/static/auth_success.html")
 
 
 def store_tokens(chat_id: str, access_token: str, refresh_token: str):
