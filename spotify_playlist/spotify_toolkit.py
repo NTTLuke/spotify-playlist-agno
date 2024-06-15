@@ -2,6 +2,7 @@ from typing import List
 from phi.tools import Toolkit
 from phi.utils.log import logger
 import requests
+from collections import Counter, defaultdict
 
 
 class SpotifyPlaylistTools(Toolkit):
@@ -12,6 +13,8 @@ class SpotifyPlaylistTools(Toolkit):
         self.register(self.create_playlist_by_uris)
         self.register(self.get_spotify_playlist_info)
         self.register(self.start_playlist_playback)
+        self.register(self.get_top_artists_and_top_genres_time_range)
+        self.register(self.get_followed_artists_and_top_genres_all_life)
 
         self.access_token = access_token
 
@@ -259,6 +262,109 @@ class SpotifyPlaylistTools(Toolkit):
         except Exception as e:
             print(f"Error invoking play_playlist: {e}")
             return f"Error starting playback: {e}"
+
+    def get_top_artists_and_top_genres_time_range(
+        self, time_range="medium_term", limit=10
+    ) -> str:
+        """
+        Useful to get the information about top artists and genres followed by the user
+        Use this when you want to the long, medium or short period of the user in music
+
+        Args:
+            time_range : str : The time range of the data. Affinities are computed over three time frames: long_term: ~1 year of data , medium_term: ~last 6 months, short_term: ~last 4 weeks
+            limit : int : The number of artists to return
+
+        Returns:
+            str: the information of top genres and artists listed by user in the given time range
+        """
+        try:
+            url = f"https://api.spotify.com/v1/me/top/artists?time_range={time_range},limit={limit}"
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+
+            artists = []
+            genres = []
+
+            while url:
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+
+                for artist in data["items"]:
+                    artist_genres = artist["genres"]
+                    artists.append({"name": artist["name"], "genres": artist_genres})
+                    genres.extend(artist_genres)
+
+                url = data.get("next")
+
+            genre_counts = Counter(genres)
+            top_5_genres = genre_counts.most_common(5)
+
+            genre_to_artists = defaultdict(list)
+
+            for artist in artists:
+                for genre in artist["genres"]:
+                    if genre in dict(top_5_genres):
+                        genre_to_artists[genre].append(artist["name"])
+
+            top_5_genre_artists = {}
+            for genre, _ in top_5_genres:
+                top_5_genre_artists[genre] = genre_to_artists[genre][:5]
+
+            return f"These are the top 5 artists by genres in the {time_range} range {top_5_genres}, {top_5_genre_artists}"
+        except Exception as e:
+            logger.warning(f"Error invoking get_followed_artists_and_top_genres: {e}")
+            return f"Error: {e}"
+
+    def get_followed_artists_and_top_genres_all_life(self) -> str:
+        """
+        Useful to get the information about top 5 artists and genres followed by the user
+        Use this when you want to the all life of the user in music
+
+        Args:
+            None
+
+        Returns:
+            str: the information of top genres and artists listed by user
+
+        """
+        try:
+            url = "https://api.spotify.com/v1/me/following?type=artist"
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+
+            artists = []
+            genres = []
+
+            while url:
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+
+                for artist in data["artists"]["items"]:
+                    artist_genres = artist["genres"]
+                    artists.append({"name": artist["name"], "genres": artist_genres})
+                    genres.extend(artist_genres)
+
+                url = data["artists"]["next"]
+
+            genre_counts = Counter(genres)
+            top_5_genres = genre_counts.most_common(5)
+
+            genre_to_artists = defaultdict(list)
+
+            for artist in artists:
+                for genre in artist["genres"]:
+                    if genre in dict(top_5_genres):
+                        genre_to_artists[genre].append(artist["name"])
+
+            top_5_genre_artists = {}
+            for genre, _ in top_5_genres:
+                top_5_genre_artists[genre] = genre_to_artists[genre][:5]
+
+            return f"These are the top 5 artists by genres {top_5_genres}, {top_5_genre_artists}"
+
+        except Exception as e:
+            logger.warning(f"Error invoking get_followed_artists_and_top_genres: {e}")
+            return f"Error: {e}"
 
     # def get_playlist_tracks(auth_token, playlist_id):
     #     url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"

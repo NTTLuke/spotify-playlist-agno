@@ -85,8 +85,12 @@ class MusicAssistant:
             add_chat_history_to_prompt=True,
             num_history_messages=3,
             role="You are an expert in using the Spotify API based on tools associated and the requests from the user.",
-            description=f"""You are an expert in using the Spotify API to perform different operations based on the user requests and the tools associated with the assistant. 
-            Be very careful with the user requests and the tools associated with the assistant.""",
+            description="You are an expert in using the Spotify API to perform different operations based on the user requests and the tools associated with the assistant."
+            "Be very careful with the user requests and the tools associated with the assistant. Always response to the user with relevant information about the action performed.",
+            instructions=[
+                "Use the Spotify API to perform different operations based on the user requests and the tools associated with the assistant.",
+                "if the user asks for play a playlist, remember the user to open the Spotify app before proceeding with the action.",
+            ],
             tools=[SpotifyPlaylistTools(access_token=self.access_token)],
             show_tool_calls=True,
         )
@@ -117,6 +121,7 @@ class MusicAssistant:
             output="The result of the action you have performed thanks to the specific assistant.",
             instructions=[
                 "ALWAYS check your historical chat messages to get a hint before asking for help.",
+                "If you think some information is missing or you need more context, ask the user for more information.",
             ],
             team=[
                 self._get_expert_analyzing_text(run_id=run_id, user_id=user_id),
