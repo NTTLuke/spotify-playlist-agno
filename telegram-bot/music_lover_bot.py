@@ -1,10 +1,3 @@
-# TODO: REMOVE SENSITIVE INFO
-# TODO: CLEAN CODE
-# TODO: IMPROVE FOLDER NAVIGATION
-# TODO: REMOVE POLLING
-# TODO: EXE RUNNING LOCAL
-
-
 import logging
 from telegram import (
     Update,
@@ -30,105 +23,12 @@ from telegram.ext import (
     InlineQueryHandler,
     CallbackQueryHandler,
 )
+import aiohttp
+
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
-
-
-# def analyze_message(message):
-
-#     from openai import AzureOpenAI
-
-#     client = AzureOpenAI(
-#         api_key=os.environ["AZURE_OPENAI_API_KEY"],
-#         api_version="2024-02-15-preview",
-#         azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-#     )
-
-#     prompt = f"""
-#             You are an assistant bot that based on text, provided by user, is able to identify which year and which kind of document is required by the user
-
-#             Extract from the user question the document type and the year required
-#             If you find the Answer it MUST BE in json this format following this pattern:
-#             {{
-#             "doc_type" : "the doc type identified",
-#             "year" : "the year identified"
-#             }}
-
-#             These are the document type supported
-#             f24 : about the f24 document
-#             redditi : about the redditi document
-#             730 : about the 730 document
-
-#             User Question
-#             {message}
-
-
-#             Response only if the question is about the document type and the year.
-#             If not or if you don't know the answer just return an empty string like this: ""
-
-#             Answer:
-#     """
-
-#     response = client.chat.completions.create(
-#         model="chat",
-#         messages=[
-#             {"role": "system", "content": prompt},
-#         ],
-#     )
-
-#     print(response.choices[0].message.content)
-#     return response.choices[0].message.content
-
-
-# def generate_keyboard_from_folder(folder_path, user_root_path):
-#     # Create an empty list to hold rows of buttons
-#     keyboard = []
-#     current_row = []
-
-#     # List all files and directories in the given folder
-#     try:
-#         items = os.listdir(folder_path)
-#     except FileNotFoundError:
-#         return None
-
-#     # Get the parent folder path
-#     if folder_path != f"./data/{user_root_path}":
-#         parent_path = os.path.dirname(folder_path)
-#         go_back_button = InlineKeyboardButton("🔙 Go Back", callback_data=f"navigate:{parent_path}")
-#         keyboard.append([go_back_button])  # Add the "Go Back" button in a new row at the top
-
-
-#     # Create a button for each item
-#     for index, item in enumerate(items):
-#         item_path = os.path.join(folder_path, item)
-
-#         # Check if it is a folder or a file
-#         if os.path.isdir(item_path):
-#             # For folders, the callback_data sends a command to navigate into the folder
-#             callback_data = f"navigate:{item_path}"
-#             button_text = f"📁 {item}"
-#         else:
-#             # For files, the callback_data is for selecting the file
-#             callback_data = f"select:{item_path}"
-#             button_text = f"📃 {item}"
-
-#         button = InlineKeyboardButton(button_text, callback_data=callback_data)
-
-#         # Add the button to the current row
-#         current_row.append(button)
-
-#         # To organize buttons into rows of 2
-#         if len(current_row) == 2:
-#             keyboard.append(current_row)
-#             current_row = []
-
-#     # If there's an odd number of buttons, add the last row
-#     if current_row:
-#         keyboard.append(current_row)
-
-#     return InlineKeyboardMarkup(keyboard)
 
 
 users = ["nttluke"]
@@ -151,7 +51,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.message.chat_id
 
     # check if the user has stored the access token
-    login_url = f"http://localhost:8000/bot-login/login?chat_id={chat_id}"
+    login_url = os.getenv("SPOTIFY_LOGIN_URL").format(
+        chat_id=chat_id
+    )  # f"http://localhost:8000/bot-login/login?chat_id={chat_id}"
     message = f"Ciao benvenuto. Per iniziare clicca [qui]({login_url})"
 
     await context.bot.send_message(
@@ -162,8 +64,39 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    # check if the user is in the list of users
-    await update.message.reply_text("Ciao")
+    # Construct the API URL
+    api_url = "http://localhost:8000/chat"
+
+    # Define the chat request body
+    chat_request_body = {
+        # Populate with the necessary data for your chat request
+        "message": update.message.text,
+        "assistant": "SPOTIFY_PLAYLIST",
+    }
+
+    # Define the Spotify refresh token
+    spotify_access_token = "BQBrRyqJiCoMPvZQT3KouyeNjxTjHwGkOvNBLAQ7tNg7j-XZ5Zb1fNZ8gPvqj1_buj2rnarDblzKf_AD6pzl7oCi50NacqzuKs0sNdzAgFMcPEzhXUoTyDmoz-6Lbuifi66dHtvYNUyfUsEEqMYTTLs6sYnz4XOBZ-aLBm7vDQtC004HUto9DfmtQJD9tuHGnXADaadopQXcU4TxVaGJCMEBlkuy_hC6-wsxldCKxw8Tae0ilPjWx5qNyEYxGNzwNzZ8xqo"
+
+    await update.message.reply_text("Your request is being processed. Please wait...")
+
+    # Make the asynchronous API call
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "X-SPOTIFY-ACCESS-TOKEN": spotify_access_token,
+            "Content-Type": "application/json",
+        }
+
+        async with session.post(
+            api_url, json=chat_request_body, headers=headers
+        ) as response:
+            # Handle the API response
+            if response.status == 200:
+                api_response = await response.text()
+                await update.message.reply_text(f"API Response: {api_response}")
+            else:
+                await update.message.reply_text(
+                    f"Failed to call API: {response.status}"
+                )
 
 
 # async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

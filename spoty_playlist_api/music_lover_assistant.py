@@ -35,13 +35,13 @@ def chat_response_streamer(spotify_access_token: str, chat_request: ChatRequest)
 
 
 @music_lover_assistant_router.post("/chat")
-async def chat(body: ChatRequest, x_spotify_refresh_token: str = Header(None)):
+async def chat(body: ChatRequest, x_spotify_access_token: str = Header(None)):
     """Sends a message to an Assistant and returns the response"""
     logger.debug(f"ChatRequest: {body}")
 
     return StreamingResponse(
         chat_response_streamer(
-            spotify_access_token=x_spotify_refresh_token, chat_request=body
+            spotify_access_token=x_spotify_access_token, chat_request=body
         ),
         media_type="text/event-stream",
     )

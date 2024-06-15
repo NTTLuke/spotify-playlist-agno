@@ -8,14 +8,16 @@ import os
 
 CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
-SCOPES = "playlist-modify-private playlist-modify-public user-modify-playback-state user-read-playback-state playlist-read-private user-follow-read user-top-read"
+SPOTIFY_SCOPES = os.getenv("SPOTIFY_SCOPES")
 # Spotify API auth URL
-REDIRECT_URL = "http://localhost:8000/bot-login/callback"
-AUTH_URL = f"https://accounts.spotify.com/authorize?response_type=code&client_id={CLIENT_ID}&scope={SCOPES}&redirect_uri={REDIRECT_URL}"
+SPOTIFY_REDIRECT_URL = os.getenv("SPOTIFY_REDIRECT_URL")
+SPOTIFY_AUTH_URL = os.getenv("SPOTIFY_AUTH_URL").format(
+    CLIENT_ID=CLIENT_ID, SCOPES=SPOTIFY_SCOPES, REDIRECT_URL=SPOTIFY_REDIRECT_URL
+)
 # Spotify API token URL
-TOKEN_URL = "https://accounts.spotify.com/api/token"
+SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
 # Redirect URL after login
-REDIRECT_RESPONSE_URL = "http://localhost:8000/static/index3.html?#showForm"
+REDIRECT_RESPONSE_URL_BOT = os.getenv("REDIRECT_RESPONSE_URL_BOT")
 
 
 spoty_auth_bot_router = APIRouter()
@@ -28,7 +30,7 @@ user_states = {}
 def login(chat_id: str):
     state = str(uuid.uuid4())
     user_states[state] = chat_id
-    url = f"{AUTH_URL}&state={state}"
+    url = f"{SPOTIFY_AUTH_URL}&state={state}"
     return RedirectResponse(url=url)
 
 
@@ -40,12 +42,12 @@ def callback(code: str, state: str, request: Request, response: Response):
     payload = {
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": REDIRECT_URL,
+        "redirect_uri": SPOTIFY_REDIRECT_URL,
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
     }
 
-    token_response = requests.post(TOKEN_URL, data=payload)
+    token_response = requests.post(SPOTIFY_TOKEN_URL, data=payload)
     if token_response.status_code != 200:
         raise HTTPException(status_code=400, detail="Error retrieving access token")
 
@@ -60,7 +62,7 @@ def callback(code: str, state: str, request: Request, response: Response):
     # Clean up the state
     del user_states[state]
 
-    return RedirectResponse(url="http://localhost:8000/static/auth_success.html")
+    return RedirectResponse(url=os.getenv("REDIRECT_RESPONSE_URL_BOT"))
 
 
 def store_tokens(chat_id: str, access_token: str, refresh_token: str):
