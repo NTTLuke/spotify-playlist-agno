@@ -1,0 +1,20 @@
+[project]
+name = "spotify-playlist-agno"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "agno>=1.5.10",
+    "httpx",
+    "python-dotenv",
+    "fastapi",
+    "uvicorn",
+    "azure-ai-inference>=1.0.0b9",
+    "aiohttp>=3.12.10",
+    "openai>=1.84.0",
+    "sqlalchemy>=2.0.41",
+    "psycopg>=3.2.9",
+    "psycopg-binary>=3.2.9",
+    "psycopg2-binary>=2.9.10",
+]

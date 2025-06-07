@@ -1,6 +1,6 @@
 from fastapi import Request, HTTPException, Response
 from fastapi.responses import RedirectResponse
-import requests
+import httpx
 import os
 from fastapi import APIRouter
 
@@ -35,7 +35,7 @@ def callback(code: str, request: Request, response: Response) -> RedirectRespons
         "client_secret": CLIENT_SECRET,
     }
 
-    token_response = requests.post(TOKEN_URL, data=payload)
+    token_response = httpx.post(TOKEN_URL, data=payload)
     if token_response.status_code != 200:
         raise HTTPException(status_code=400, detail="Error retrieving access token")
 

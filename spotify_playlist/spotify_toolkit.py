@@ -1,13 +1,14 @@
-from typing import List
-from phi.tools import Toolkit
-from phi.utils.log import logger
-import requests
+from typing import List, Dict, Any, Union, Optional
+from agno.tools import Toolkit
+from agno.utils.log import logger
+import httpx
 from collections import Counter, defaultdict
+import time
 
 
 class SpotifyPlaylistTools(Toolkit):
     def __init__(self, access_token: str):
-        super().__init__(name="spotity_playlist_tools")
+        super().__init__(name="spotify_playlist_tools")
         self.register(self.get_user_id)
         self.register(self.search_songs_uris)
         self.register(self.create_playlist_by_uris)
@@ -15,87 +16,88 @@ class SpotifyPlaylistTools(Toolkit):
         self.register(self.start_playlist_playback)
         self.register(self.get_top_artists_and_top_genres_time_range)
         self.register(self.get_followed_artists_and_top_genres_all_life)
+        self.register(self.get_recently_played_tracks)
+        self.register(self.get_friday_new_releases)
 
         self.access_token = access_token
+        self.base_url = "https://api.spotify.com/v1"
+        self.headers = {"Authorization": f"Bearer {self.access_token}"}
+
+    def _api_request(
+        self, method: str, url: str, **kwargs
+    ) -> Union[Dict[str, Any], str]:
+        """Helper method to make requests to the Spotify API."""
+        headers = self.headers.copy()
+        if "json" in kwargs or "data" in kwargs:
+            headers["Content-Type"] = "application/json"
+
+        try:
+            response = httpx.request(method, url, headers=headers, **kwargs)
+            logger.debug(f"Request to {url} with status {response.status_code}")
+            response.raise_for_status()
+            if response.status_code == 204 or not response.content:
+                return {}
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            msg = (
+                f"API request failed with status {e.response.status_code}:"
+                f" {e.response.text}"
+            )
+            logger.warning(msg)
+            return f"Error: {msg}"
+        except Exception as e:
+            logger.warning(f"An unexpected error occurred: {e}")
+            return f"Error: {e}"
 
     def get_user_id(self) -> str:
         """
-        Make a request to Spotify API to get user information
+        Make a request to Spotify API to get user information.
 
         Returns:
-            str: the user id of the spotify user
+            str: The user ID of the Spotify user or an error message.
         """
-        logger.info(f"Running get_user_id with access token")
-        try:
-            user_url = "https://api.spotify.com/v1/me"
-            headers = {"Authorization": f"Bearer {self.access_token}"}
+        logger.info("Running get_user_id")
+        result = self._api_request("GET", f"{self.base_url}/me")
 
-            user_response = requests.get(user_url, headers=headers)
-            logger.debug(f"Result: {user_response}")
+        if isinstance(result, str):
+            return result
 
-            if user_response.status_code != 200:
-                msg = f"Failed to get user id. Status code: {user_response.status_code}"
-                logger.warning(msg)
-                return f"Error: {msg}"
+        if "id" in result:
+            return result["id"]
 
-            user_data = user_response.json()
-            user_id = user_data["id"]
+        logger.warning("Could not find user ID in response.")
+        return "Error: Could not find user ID in response."
 
-            return user_id
-        except Exception as e:
-            logger.warning(f"Error invoking get_user_id: {e}")
-            return f"Error: {e}"
-
-    def search_songs_uris(self, song_titles: List[str]) -> List[str]:
+    def search_songs_uris(self, song_titles: List[str]) -> Union[List[str], str]:
         """
-        Userful to search the songs uri on spotify and return the list of uris of each song.
+        Search for song URIs on Spotify.
 
         Args:
-            song_titles : List[str] : A list of song titles to search on spotify
+            song_titles: A list of song titles to search for.
 
         Returns:
-            List[str] : The list of songs uris found on spotify
-
+            A list of song URIs found, or an error message if a general error occurs.
+            If a single song is not found, it is skipped.
         """
-        logger.info(f"Running search_songs_uris with access token")
-        try:
-            if not self.access_token:
-                return "Error: No access token provided."
+        logger.info("Running search_songs_uris")
+        songs_uris = []
+        for song_title in song_titles:
+            params = {"q": song_title, "type": "track", "market": "IT", "limit": 1}
+            result = self._api_request("GET", f"{self.base_url}/search", params=params)
 
-            url = "https://api.spotify.com/v1/search"
-            headers = {
-                "Authorization": f"Bearer {self.access_token}",
-            }
+            if isinstance(result, str):
+                logger.warning(
+                    f"Failed to fetch track URI for '{song_title}': {result}"
+                )
+                continue
 
-            songs_uris = []
-            for song_title in song_titles:
-                params = {"q": song_title, "type": "track", "market": "IT", "limit": 1}
+            if result.get("tracks", {}).get("items"):
+                track_uri = result["tracks"]["items"][0]["uri"]
+                songs_uris.append(track_uri)
+            else:
+                logger.info(f"No track found for '{song_title}'.")
 
-                logger.debug(f"Searching for song: {song_title}")
-                response = requests.get(url, params=params, headers=headers)
-                logger.debug(f"Result: {response}")
-
-                if response.status_code != 200:
-                    logger.warning(
-                        "Failed to fetch track URI. Status code:", response.status_code
-                    )
-                    continue
-
-                data = response.json()
-                if (
-                    "tracks" in data
-                    and "items" in data["tracks"]
-                    and len(data["tracks"]["items"]) > 0
-                ):
-                    track_uri = data["tracks"]["items"][0]["uri"]
-                    songs_uris.append(f"the song uri of {song_title} is : {track_uri}")
-                else:
-                    logger.info("No track found.")
-
-            return "\n".join(songs_uris)
-        except Exception as e:
-            logger.warning(f"Error invoking search_songs_uris: {e}")
-            return f"Error: {e}"
+        return songs_uris
 
     def create_playlist_by_uris(
         self,
@@ -103,274 +105,477 @@ class SpotifyPlaylistTools(Toolkit):
         playlist_name="made by NTTLuke (with Phidata)",
     ) -> str:
         """
-        Userful to create a playlist on spotify by using the uris of the songs and returns the playlist id
-        Uris of the songs can be retrieved using search_songs_uris method
+        Create a playlist on Spotify with a given list of song URIs.
 
         Args:
-            songs_uris : List[str] : The list of songs uris to add to the playlist.
-            playlist_name : str : The name of the playlist to create
+            songs_uris: A list of song URIs to add to the playlist.
+            playlist_name: The name for the new playlist.
 
-        Returns
-            str: the playlist id of the created playlist
+        Returns:
+            A message indicating success or failure, including the playlist ID.
         """
+        logger.info("Running create_playlist_by_uris")
 
-        logger.info(f"Running create_playlist_by_uris")
-        try:
+        user_id = self.get_user_id()
+        if user_id.startswith("Error:"):
+            return f"Error creating playlist: could not get user ID. Details: {user_id}"
 
-            user_id = self.get_user_id()
+        playlist_data = {
+            "name": playlist_name,
+            "description": "generated by phidata",
+            "public": False,
+        }
 
-            url = f"https://api.spotify.com/v1/users/{user_id}/playlists"
-            headers = {
-                "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
-            }
-            data = {
-                "name": playlist_name,
-                "description": "generated by phidata",
-                "public": False,
-            }
+        create_playlist_url = f"{self.base_url}/users/{user_id}/playlists"
+        result = self._api_request("POST", create_playlist_url, json=playlist_data)
 
-            logger.debug(f"Creating playlist: {playlist_name}")
+        if isinstance(result, str):
+            return f"Error creating playlist: {result}"
 
-            # Create the playlist
-            response = requests.post(url, headers=headers, json=data)
-            logger.debug(f"Result: {response}")
+        playlist_id = result.get("id")
+        if not playlist_id:
+            return "Error: Playlist created but no ID was returned."
 
-            if response.status_code == 201 or response.status_code == 200:
-                playlist_data = response.json()
-                playlist_id = playlist_data.get("id")
+        logger.info(f"Playlist created successfully with ID: {playlist_id}")
 
-                logger.info(f"Playlist created successfully with ID: {playlist_id}")
+        if not songs_uris:
+            logger.info("No songs to add to the playlist.")
+            return f"Created a new empty playlist with Playlist ID={playlist_id}"
 
-                data = {"uris": songs_uris, "position": 0}
+        add_songs_url = f"{self.base_url}/playlists/{playlist_id}/tracks"
+        add_songs_data = {"uris": songs_uris, "position": 0}
 
-                # Add songs to the playlist
-                response = requests.post(
-                    f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks",
-                    headers=headers,
-                    json=data,
-                )
-                if response.status_code == 201 or response.status_code == 200:
-                    logger.info("Songs added to the playlist successfully.")
-                    return f"Created a new playlist with Playlist ID={playlist_id}"
-                else:
-                    logger.warning(
-                        "Failed to add songs to the playlist. Status code:",
-                        response.status_code,
-                    )
+        add_result = self._api_request("POST", add_songs_url, json=add_songs_data)
 
-                    return f"Playlist created with but failed to add songs. Playlist ID: {playlist_id}"
+        if isinstance(add_result, str):
+            return (
+                f"Playlist created with ID {playlist_id}, but failed to add songs."
+                f" Error: {add_result}"
+            )
 
-            else:
-                logger.warning(
-                    f"Failed to create playlist. Status code:{response.status_code}"
-                )
-                return None
+        logger.info("Songs added to the playlist successfully.")
+        return f"Created a new playlist with Playlist ID={playlist_id}"
 
-        except Exception as e:
-            logger.warning(f"Error invoking create_playlist_by_uris: {e}")
-            return f"Error creating playlist: {e}"
-
-    def get_spotify_playlist_info(self, max_number: int = 5) -> dict:
+    def get_spotify_playlist_info(
+        self, max_number: int = 5
+    ) -> Union[List[Dict[str, str]], str]:
         """
-        Get the list of playlist name of the user
+        Get a list of the user's playlists.
+
         Args:
-            max_number : int : The maximum number of playlists to return (default 5)
+            max_number: The maximum number of playlists to return.
+
+        Returns:
+            A list of playlist details (name and ID), or an error message.
         """
-        try:
-            url = f"https://api.spotify.com/v1/me/playlists?limit={max_number}"
-            headers = {"Authorization": f"Bearer {self.access_token}"}
+        logger.info("Running get_spotify_playlist_info")
+        url = f"{self.base_url}/me/playlists"
+        params = {"limit": max_number}
+        result = self._api_request("GET", url, params=params)
 
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
+        if isinstance(result, str):
+            return result
 
-            playlists = response.json()
-
-            playlist_details = [
-                {"name": item["name"], "id": item["id"]} for item in playlists["items"]
+        if "items" in result:
+            return [
+                {"name": item["name"], "id": item["id"]} for item in result["items"]
             ]
 
-            # # Extract playlist names
-            # playlist_names = [item["name"] for item in playlists["items"]]
-
-            return f"Here the playlist details: {playlist_details}"
-
-        except Exception as e:
-            logger.warning(f"Error invoking get_spotify_playlists: {e}")
-            return f"Error: {e}"
+        logger.warning("Could not find 'items' in playlist response.")
+        return "Error: Could not parse playlists from response."
 
     def start_playlist_playback(self, playlist_id: str) -> str:
         """
-        Useful for initiating playback of a playlist on a user's device.
+        Initiate playback of a playlist on a user's active device.
+
         Args:
-            playlist_id : str : The id of the playlist to play
+            playlist_id: The ID of the playlist to play.
 
         Returns:
-            str: the status of the playback
+            The status of the playback operation.
         """
-        import time
+        logger.info("Running start_playlist_playback")
 
-        try:
-            url = f"https://api.spotify.com/v1/me/player/devices"
+        devices_result = self._api_request("GET", f"{self.base_url}/me/player/devices")
+        if isinstance(devices_result, str):
+            return f"Error getting devices: {devices_result}"
 
-            headers = {"Authorization": f"Bearer {self.access_token}"}
+        devices = devices_result.get("devices", [])
+        if not devices:
+            return "You have to open at least one device to play the playlist."
 
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
+        device_id = devices[0]["id"]
+        device_name = devices[0]["name"]
+        logger.info(f"Found device: {device_name} ({device_id})")
 
-            devices = response.json().get("devices", [])
-            if not devices:
-                return "You have to open at least one device to play the playlist."
-
-            # choose always the first one
-            device_id = devices[0]["id"]
-            device_name = devices[0]["name"]
-
-            url = f"https://api.spotify.com/v1/me/player/play?device_id={device_id}"
-            headers = {
-                "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
-            }
-            data = {
-                "context_uri": f"spotify:playlist:{playlist_id}",
-                "offset": {"position": 0},
-                "position_ms": 0,
-            }
-
-            # check if the playlist is available before starting the playback
-            # TODO: IMPROVE !!!!
-            counter = 0
-            max_counter = 5
-            while counter < max_counter:
-                response = requests.get(
-                    f"https://api.spotify.com/v1/playlists/{playlist_id}",
-                    headers=headers,
-                )
-
+        # A new playlist might not be available immediately. We poll for a few seconds.
+        playlist_url = f"{self.base_url}/playlists/{playlist_id}"
+        max_retries = 5
+        for i in range(max_retries):
+            try:
+                response = httpx.get(playlist_url, headers=self.headers)
                 if response.status_code == 200:
+                    logger.info("Playlist is available for playback.")
                     break
-                else:
-                    counter += 1
-                    time.sleep(1)
+                logger.debug(
+                    f"Playlist not ready yet (status: {response.status_code}), retrying..."
+                )
+            except Exception as e:
+                logger.warning(f"Error checking playlist status: {e}")
 
-            # start the playback
-            response = requests.put(url, headers=headers, json=data)
+            if i == max_retries - 1:
+                return "Error: Playlist did not become available for playback in time."
+            time.sleep(1)
 
-            response.raise_for_status()
-            return f"Playback started successfully on device: {device_name}"
+        play_url = f"{self.base_url}/me/player/play"
+        play_data = {
+            "context_uri": f"spotify:playlist:{playlist_id}",
+            "offset": {"position": 0},
+            "position_ms": 0,
+        }
+        play_result = self._api_request(
+            "PUT", play_url, params={"device_id": device_id}, json=play_data
+        )
 
-        except Exception as e:
-            print(f"Error invoking play_playlist: {e}")
-            return f"Error starting playback: {e}"
+        if isinstance(play_result, str):
+            return f"Error starting playback: {play_result}"
+
+        return f"Playback started successfully on device: {device_name}"
+
+    def _get_and_process_artists(
+        self, initial_url: str, result_key: Optional[str]
+    ) -> Union[Dict[str, Any], str]:
+        """
+        Fetches and processes artist data from a paginated Spotify API endpoint.
+
+        Args:
+            initial_url: The first URL to fetch from.
+            result_key: The key in the response where the list of items is located.
+                        (e.g., 'artists' for followed artists endpoint). If None, the
+                        root of the response is used.
+
+        Returns:
+            A dictionary with top genres and artists, or an error string.
+        """
+        artists = []
+        genres = []
+        url: Optional[str] = initial_url
+
+        while url:
+            result = self._api_request("GET", url)
+            if isinstance(result, str):
+                return result
+
+            data_source = result
+            if result_key:
+                if result_key not in result:
+                    return f"Error: key '{result_key}' not in response."
+                data_source = result[result_key]
+
+            for artist in data_source.get("items", []):
+                artist_genres = artist.get("genres", [])
+                artists.append({"name": artist["name"], "genres": artist_genres})
+                genres.extend(artist_genres)
+
+            url = data_source.get("next")
+
+        genre_counts = Counter(genres)
+        top_5_genres = genre_counts.most_common(5)
+
+        genre_to_artists = defaultdict(list)
+        for artist in artists:
+            for genre in artist["genres"]:
+                if genre in dict(top_5_genres):
+                    genre_to_artists[genre].append(artist["name"])
+
+        top_5_genre_artists = {
+            genre: genre_to_artists[genre][:5] for genre, _ in top_5_genres
+        }
+
+        return {
+            "top_genres": top_5_genres,
+            "top_artists_by_genre": top_5_genre_artists,
+        }
 
     def get_top_artists_and_top_genres_time_range(
         self, time_range="medium_term", limit=10
     ) -> str:
         """
-        Useful to get the information about top artists and genres followed by the user
-        Use this when you want to the long, medium or short period of the user in music
+        Gets the user's top artists and genres over a specific time range.
 
         Args:
-            time_range : str : The time range of the data. Affinities are computed over three time frames: long_term: ~1 year of data , medium_term: ~last 6 months, short_term: ~last 4 weeks
-            limit : int : The number of artists to return
+            time_range: 'long_term' (~1yr), 'medium_term' (~6mo), or 'short_term' (~4wk).
+            limit: The number of top artists to retrieve.
 
         Returns:
-            str: the information of top genres and artists listed by user in the given time range
+            A summary of the user's top genres and artists.
         """
-        try:
-            url = f"https://api.spotify.com/v1/me/top/artists?time_range={time_range},limit={limit}"
-            headers = {"Authorization": f"Bearer {self.access_token}"}
+        logger.info(f"Getting top artists and genres for time range: {time_range}")
+        # Note: The 'limit' parameter for top artists applies to the initial fetch,
+        # but pagination will be followed to get a complete list for genre analysis.
+        url = f"{self.base_url}/me/top/artists?time_range={time_range}&limit={limit}"
 
-            artists = []
-            genres = []
+        result = self._get_and_process_artists(url, result_key=None)
 
-            while url:
-                response = requests.get(url, headers=headers)
-                response.raise_for_status()
-                data = response.json()
+        if isinstance(result, str):
+            return result
 
-                for artist in data["items"]:
-                    artist_genres = artist["genres"]
-                    artists.append({"name": artist["name"], "genres": artist_genres})
-                    genres.extend(artist_genres)
-
-                url = data.get("next")
-
-            genre_counts = Counter(genres)
-            top_5_genres = genre_counts.most_common(5)
-
-            genre_to_artists = defaultdict(list)
-
-            for artist in artists:
-                for genre in artist["genres"]:
-                    if genre in dict(top_5_genres):
-                        genre_to_artists[genre].append(artist["name"])
-
-            top_5_genre_artists = {}
-            for genre, _ in top_5_genres:
-                top_5_genre_artists[genre] = genre_to_artists[genre][:5]
-
-            return f"These are the top 5 artists by genres in the {time_range} range {top_5_genres}, {top_5_genre_artists}"
-        except Exception as e:
-            logger.warning(f"Error invoking get_followed_artists_and_top_genres: {e}")
-            return f"Error: {e}"
+        return (
+            f"Top 5 genres for {time_range}: {result['top_genres']}. "
+            f"Top artists for these genres: {result['top_artists_by_genre']}"
+        )
 
     def get_followed_artists_and_top_genres_all_life(self) -> str:
         """
-        Useful to get the information about top 5 artists and genres followed by the user
-        Use this when you want to the all life of the user in music
-
-        Args:
-            None
+        Gets top genres based on all artists the user follows.
 
         Returns:
-            str: the information of top genres and artists listed by user
-
+            A summary of top genres and corresponding followed artists.
         """
-        try:
-            url = "https://api.spotify.com/v1/me/following?type=artist"
-            headers = {"Authorization": f"Bearer {self.access_token}"}
+        logger.info("Getting followed artists and top genres")
+        url = f"{self.base_url}/me/following?type=artist&limit=5"
+        result = self._get_and_process_artists(url, result_key="artists")
 
-            artists = []
-            genres = []
+        if isinstance(result, str):
+            return result
 
-            while url:
-                response = requests.get(url, headers=headers)
-                response.raise_for_status()
-                data = response.json()
+        return (
+            f"Top 5 genres from followed artists: {result['top_genres']}. "
+            f"Followed artists for these genres: {result['top_artists_by_genre']}"
+        )
 
-                for artist in data["artists"]["items"]:
-                    artist_genres = artist["genres"]
-                    artists.append({"name": artist["name"], "genres": artist_genres})
-                    genres.extend(artist_genres)
+    def get_recently_played_tracks(self, limit: int = 10) -> str:
+        """
+        Get the user's recently played tracks and analyze them.
 
-                url = data["artists"]["next"]
+        Args:
+            limit: The number of recently played tracks to retrieve (max 50, default 10).
 
-            genre_counts = Counter(genres)
-            top_5_genres = genre_counts.most_common(5)
+        Returns:
+            A summary of recently played tracks, including top genres, as a string.
+        """
+        logger.info(f"Getting {limit} recently played tracks")
 
-            genre_to_artists = defaultdict(list)
+        # Get recently played tracks
+        url = f"{self.base_url}/me/player/recently-played"
+        params = {"limit": min(limit, 50)}  # Spotify API limit is 50
+        result = self._api_request("GET", url, params=params)
 
+        if isinstance(result, str):
+            return result
+
+        if "items" not in result:
+            return "Error: Could not find recently played tracks in response."
+
+        tracks_info = []
+        artist_ids = set()
+
+        # Extract track information and collect artist IDs
+        for item in result["items"]:
+            track = item.get("track", {})
+            if not track:
+                continue
+
+            track_name = track.get("name", "Unknown")
+            artists = track.get("artists", [])
+            artist_names = [artist.get("name", "Unknown") for artist in artists]
+
+            # Collect artist IDs for genre lookup
             for artist in artists:
-                for genre in artist["genres"]:
-                    if genre in dict(top_5_genres):
-                        genre_to_artists[genre].append(artist["name"])
+                if artist.get("id"):
+                    artist_ids.add(artist["id"])
 
-            top_5_genre_artists = {}
-            for genre, _ in top_5_genres:
-                top_5_genre_artists[genre] = genre_to_artists[genre][:5]
+            tracks_info.append(
+                {
+                    "title": track_name,
+                    "artists": artist_names,
+                    "artist_ids": [
+                        artist.get("id") for artist in artists if artist.get("id")
+                    ],
+                    "played_at": item.get("played_at", "Unknown"),
+                    "genres": [],  # Will be populated later
+                }
+            )
 
-            return f"These are the top 5 artists by genres {top_5_genres}, {top_5_genre_artists}"
+        # Batch fetch artist information to get genres (Spotify API supports up to 50 IDs)
+        if artist_ids:
+            artist_ids_list = list(artist_ids)
+            genres_by_artist = {}
 
-        except Exception as e:
-            logger.warning(f"Error invoking get_followed_artists_and_top_genres: {e}")
-            return f"Error: {e}"
+            # Process in batches of 50 (Spotify API limit)
+            for i in range(0, len(artist_ids_list), 50):
+                batch_ids = artist_ids_list[i : i + 50]
+                artists_url = f"{self.base_url}/artists"
+                params = {"ids": ",".join(batch_ids)}
+
+                artists_result = self._api_request("GET", artists_url, params=params)
+
+                if isinstance(artists_result, str):
+                    logger.warning(f"Failed to fetch artist genres: {artists_result}")
+                    continue
+
+                for artist in artists_result.get("artists", []):
+                    artist_id = artist.get("id")
+                    if artist_id:
+                        genres_by_artist[artist_id] = artist.get("genres", [])
+
+            # Assign genres to tracks
+            for track in tracks_info:
+                track_genres = []
+                for artist_id in track["artist_ids"]:
+                    if artist_id in genres_by_artist:
+                        track_genres.extend(genres_by_artist[artist_id])
+
+                # Remove duplicates and keep the list ordered
+                seen = set()
+                track["genres"] = [
+                    g for g in track_genres if not (g in seen or seen.add(g))
+                ]
+
+                # Remove artist_ids from final output as they're not needed
+                del track["artist_ids"]
+
+        # Create a summary string
+        all_genres = []
+        for track in tracks_info:
+            all_genres.extend(track["genres"])
+
+        genre_counts = Counter(all_genres)
+        top_genres = genre_counts.most_common(5)
+
+        summary_lines = [f"Analyzed {len(tracks_info)} recently played tracks."]
+
+        if top_genres:
+            top_genres_str = ", ".join(
+                [f"{genre} ({count} times)" for genre, count in top_genres]
+            )
+            summary_lines.append(f"Top 5 genres from recent tracks: {top_genres_str}.")
+        else:
+            summary_lines.append("No genre information found for recent tracks.")
+
+        if tracks_info:
+            summary_lines.append("Recently played tracks:")
+            for i, track in enumerate(tracks_info, 1):
+                title = track["title"]
+                artists = ", ".join(track["artists"])
+                summary_lines.append(f"{i}. '{title}' by {artists}")
+
+        return "\n".join(summary_lines)
+
+    def get_friday_new_releases(self, limit: int = 20, country: str = "IT") -> str:
+        """
+        Get new album releases from Friday (typical release day for new music).
+        Creates a playlist with tracks from these new releases.
+
+        Args:
+            limit: Number of new releases to fetch (max 50)
+            country: ISO 3166-1 alpha-2 country code for market
+
+        Returns:
+            A summary of new releases and playlist creation status.
+        """
+        logger.info(f"Getting Friday new releases for {country}")
+        
+        # Get new releases
+        url = f"{self.base_url}/browse/new-releases"
+        params = {
+            "limit": min(limit, 50),
+            "country": country
+        }
+        
+        result = self._api_request("GET", url, params=params)
+        
+        if isinstance(result, str):
+            return result
+        
+        albums = result.get("albums", {}).get("items", [])
+        if not albums:
+            return "No new releases found."
+        
+        # Collect tracks from new albums
+        all_track_uris = []
+        release_summary = []
+        
+        for album in albums:
+            album_id = album.get("id")
+            album_name = album.get("name", "Unknown")
+            artists = ", ".join([artist.get("name", "Unknown") for artist in album.get("artists", [])])
+            release_date = album.get("release_date", "Unknown")
+            
+            # Get tracks from the album
+            tracks_url = f"{self.base_url}/albums/{album_id}/tracks"
+            tracks_params = {"limit": 50}
+            tracks_result = self._api_request("GET", tracks_url, params=tracks_params)
+            
+            if isinstance(tracks_result, str):
+                logger.warning(f"Failed to get tracks for album {album_name}")
+                continue
+            
+            tracks = tracks_result.get("items", [])
+            track_uris = [track.get("uri") for track in tracks if track.get("uri")]
+            
+            if track_uris:
+                # Add first 2-3 tracks from each album to avoid playlist being too long
+                all_track_uris.extend(track_uris[:3])
+                release_summary.append(f"'{album_name}' by {artists} (Released: {release_date})")
+        
+        if not all_track_uris:
+            return "Found new releases but couldn't extract any tracks."
+        
+        # Create playlist with new releases
+        from datetime import datetime
+        today = datetime.now().strftime("%Y-%m-%d")
+        playlist_name = f"Friday New Releases - {today}"
+        
+        # Get user ID
+        user_id = self.get_user_id()
+        if isinstance(user_id, str) and user_id.startswith("Error"):
+            return user_id
+        
+        # Create the playlist
+        playlist_url = f"{self.base_url}/users/{user_id}/playlists"
+        playlist_data = {
+            "name": playlist_name,
+            "description": f"Fresh releases for your Friday! Updated {today}",
+            "public": False
+        }
+        
+        playlist_result = self._api_request("POST", playlist_url, json=playlist_data)
+        
+        if isinstance(playlist_result, str):
+            return f"Found releases but failed to create playlist: {playlist_result}"
+        
+        playlist_id = playlist_result.get("id")
+        if not playlist_id:
+            return "Failed to create playlist - no ID returned"
+        
+        # Add tracks to playlist (Spotify limits to 100 tracks per request)
+        add_tracks_url = f"{self.base_url}/playlists/{playlist_id}/tracks"
+        
+        # Take only first 50 tracks to keep playlist manageable
+        tracks_to_add = all_track_uris[:50]
+        add_result = self._api_request("POST", add_tracks_url, json={"uris": tracks_to_add})
+        
+        if isinstance(add_result, str):
+            return f"Created playlist but failed to add tracks: {add_result}"
+        
+        # Prepare summary
+        summary = [
+            f"✨ Created playlist: '{playlist_name}' with {len(tracks_to_add)} tracks",
+            f"\nNew releases included ({len(release_summary)} albums):"
+        ]
+        summary.extend(release_summary[:10])  # Show first 10 albums
+        
+        if len(release_summary) > 10:
+            summary.append(f"... and {len(release_summary) - 10} more albums")
+        
+        return "\n".join(summary)
 
     # def get_playlist_tracks(auth_token, playlist_id):
     #     url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
     #     headers = {"Authorization": f"Bearer {auth_token}"}
 
-    #     response = requests.get(url, headers=headers)
+    #     response = httpx.get(url, headers=headers)
     #     response.raise_for_status()
     #     return response.json()
 

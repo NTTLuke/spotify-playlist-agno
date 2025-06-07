@@ -1,11 +1,11 @@
-from phi.assistant import Assistant
+from agno.agent import Agent
 import os
 from dotenv import load_dotenv
-from phi.llm.openai.chat import OpenAIChat
-
-from spotify_playlist.tasks import SearchTools
+from agno.models.azure.openai_chat import AzureOpenAI
+from agno.team.team import Team
 from spotify_playlist.spotify_toolkit import SpotifyPlaylistTools
-from phi.storage.assistant.postgres import PgAssistantStorage
+from agno.storage.agent.postgres import PostgresAgentStorage
+from agno.tools.serperapi import SerperApiTools
 
 load_dotenv()
 
@@ -13,10 +13,13 @@ load_dotenv()
 class MusicAssistant:
     def __init__(self):
 
-        if os.getenv("OPENAI_API_KEY") is None:
-            raise ValueError("OpenAI API key is required to create the MusicAssistant.")
-
-        self.llm = OpenAIChat(model="gpt-4o", api_key=os.getenv("OPENAI_API_KEY"))
+        self.llm = AzureOpenAI(
+            id="gpt-4o", 
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"), 
+            azure_deployment=os.getenv("AZURE_DEPLOYMENT_NAME"),
+            temperature=0.3
+        )
 
         if os.getenv("POSTGRES_URL") is None:
             raise ValueError(
@@ -24,50 +27,63 @@ class MusicAssistant:
             )
 
         try:
-            self.storage = PgAssistantStorage(
-                table_name="assistant_runs", db_url=os.getenv("POSTGRES_URL")
+            self.storage = PostgresAgentStorage(
+                table_name="spotify_playlist_assistant",
+                db_url=os.getenv("POSTGRES_URL"),
+                auto_upgrade_schema=True,
+                mode="team",
             )
         except Exception as e:
             raise ValueError(f"Error creating the storage: {e}")
 
         self.access_token = None
 
-    def _get_expert_analyzing_text(self, run_id: str, user_id: str) -> Assistant:
-        return Assistant(
-            run_id=run_id,
+    def _get_expert_analyzing_text(self, session_id: str, user_id: str) -> Agent:
+        return Agent(
+            model=self.llm,
+            session_id=session_id,
+            storage=self.storage,
             user_id=user_id,
             name="Expert Text Analyzer",
-            storage=self.storage,
-            read_chat_history=True,
             role="Expert Text Analyzer for music selection",
-            description=f"You are an expert in analyzing textual information to accurately select music."
-            "With decades of experience, You are specialized in interpreting a wide range of textual data to identify that best match genre from the provided context."
-            "You have decades of experience in understanding genre based text info.",
-            instructions=[
-                "Analyze the text to understand the user's mood and music preferences.",
-                "Use this information to identify the genre of music that would best suit the user's mood.",
-            ],
+            add_history_to_messages=True,
+            num_history_responses=3,
+            description="""
+            You are an expert in analyzing user input text to understand their emotional tone, intentions, and musical preferences.
+            Your job is to infer mood and genre indications based on how the user describes what they want to listen to, how they feel, or what they're doing.
+            """,
+           instructions=[
+                "Carefully read the user’s text and analyze emotional or situational context (e.g., 'feeling sad', 'need focus music').",
+                "Return a short summary of the inferred mood and the music genre(s) that match it.",
+                "Use decades of music experience to map nuanced emotions or scenarios to appropriate genres."
+            ]
         )
 
-    def _get_music_curator(self, run_id: str, user_id: str) -> Assistant:
-        return Assistant(
-            run_id=run_id,
+    def _get_music_curator(self, session_id: str, user_id: str) -> Agent:
+        return Agent(
+            model=self.llm,
+            session_id=session_id,
             user_id=user_id,
             storage=self.storage,
-            add_chat_history_to_prompt=True,
-            num_history_messages=3,
+            add_history_to_messages=True,
+            num_history_responses=3,
             name="Expert Music Curator",
             role="Expert Music Curator for music selection",
-            description="You are an expert in searching music online based on the user's mood and preferences identified by the expert text analyzer.",
+            description="""
+            You are a music curator with deep knowledge of music trends and user tastes.
+            Using the output from the Expert Text Analyzer or direct user instructions, your job is to identify and suggest 10 specific songs that best match the requested style or mood.
+            """,
             instructions=[
-                "Search for 10 SONGS ONLY based on the user needs.Take care about music trends requested by the user.Provide a search query to find the songs on the internet specific for the user needs."
+                "Search for 10 SONGS ONLY based on the user's needs or the mood/genre provided by the text analyzer.",
+                "Tailor your search queries using user mood, preferences, or trends they mention (e.g., 'summer 2020 pop').",
+                "Find songs that fit, and ensure they are relevant and varied."
             ],
-            tools=[SearchTools.search_internet],
+            tools=[SerperApiTools(api_key=os.getenv("SERPER_API_KEY"))],
         )
 
     def _get_spotify_api_expert(
-        self, access_token: str, run_id: str, user_id: str
-    ) -> Assistant:
+        self, access_token: str, session_id: str, user_id: str
+    ) -> Agent:
 
         if not access_token:
             raise ValueError(
@@ -77,58 +93,88 @@ class MusicAssistant:
         if self.access_token is None:
             self.access_token = access_token
 
-        return Assistant(
-            run_id=run_id,
+        return Agent(
+            model=self.llm,
+            session_id=session_id,
             user_id=user_id,
-            name="Spotify API Expert",
+            name="Spotify API Expert Team",
+            role="Spotify API Expert Team",
             storage=self.storage,
-            add_chat_history_to_prompt=True,
-            num_history_messages=3,
-            role="You are an expert in using the Spotify API based on tools associated and the requests from the user.",
-            description="You are an expert in using the Spotify API to perform different operations based on the user requests and the tools associated with the assistant."
-            "Be very careful with the user requests and the tools associated with the assistant. Always response to the user with relevant information about the action performed.",
+            add_history_to_messages=True,
+            num_history_responses=3,
+            description="""
+            You are a specialist team responsible for executing actions on Spotify, such as searching songs, creating playlists, retrieving listening history, or playing music.
+            You must always act after user preferences have been analyzed and songs have been selected.
+            Every operation must be clearly explained to the user, and you must confirm the context before proceeding.
+            """,
             instructions=[
-                "Use the Spotify API to perform different operations based on the user requests and the tools associated with the assistant.",
-                "if the user asks for play a playlist, remember the user to open the Spotify app before proceeding with the action.",
+            "Use the Spotify API to perform operations only after receiving user preferences or selected songs.",
+            "Before creating a playlist, verify the list of URIs and include a confirmation of the playlist title or theme.",
+            "If the user asks to play music, remind them to open the Spotify app on an active device before starting playback.",
+            "When showing playlist info or trends, summarize key elements such as track count, genres, and durations.",
+            "Do not make assumptions—wait for input from the Text Analyzer and Music Curator before taking action."
             ],
+            success_criteria="The team has completed all the tasks.",
             tools=[SpotifyPlaylistTools(access_token=self.access_token)],
             show_tool_calls=True,
         )
 
-    def get_team(self, access_token: str, run_id: str, user_id: str) -> Assistant:
+    def get_team(self, access_token: str, session_id: str, user_id: str) -> Team:
 
         if not access_token:
             raise ValueError(
                 "Access token is required to create the SpotifyPlaylistTeam."
             )
-
-        if not run_id:
-            raise ValueError("Run ID is required to create the SpotifyPlaylistTeam.")
+        
+        if not session_id:
+            raise ValueError("Session ID is required to create the SpotifyPlaylistTeam.")
 
         if not user_id:
             raise ValueError("User ID is required to create the SpotifyPlaylistTeam.")
 
-        return Assistant(
-            run_id=run_id,
+        return Team(
+            model=self.llm,
+            session_id=session_id,
             user_id=user_id,
-            llm=self.llm,
-            name="Phidata Music Assistant",
+            mode="collaborate",
+            name="Spotify Music Assistant",
             storage=self.storage,
-            add_chat_history_to_prompt=True,
-            num_history_messages=3,
-            description="""This team is the Music Assistant every user needs. You can do a lot of things with this team especially if you are a music lover.
-            Always check your historical chat messages to get missing information before making any conclusions.""",
-            output="The result of the action you have performed thanks to the specific assistant.",
+            add_history_to_messages=True,
+            num_of_interactions_from_history=10,
+            description="""You are a team leader assistant responsible for helping users create personalized Spotify playlists.
+            To do this, you coordinate with specialized agents who analyze user text, curate songs, and perform Spotify API operations.
+            You must always start by understanding the user's mood or preferences—either from chat history or by asking questions—before assigning any tasks to your team.
+            Playlists must never be created or played without confirming that they match the user's taste.
+            """,  
             instructions=[
-                "ALWAYS check your historical chat messages to get a hint before asking for help.",
-                "If you think some information is missing or you need more context, ask the user for more information.",
+                "If the user's mood or preferences are unclear, ask for more context or let the Expert Text Analyzer interpret user input.",
+                "Once the mood or preferences are clear, delegate to team members to perform the tasks.",
+                "Make sure each agent's output is correct before taking the next step.",
+                "Ask the user when you don't understand the user's request. Otherwise proceed.",
+                "Inform the user about the playlist creation with the link to the playlist."
             ],
-            team=[
-                self._get_expert_analyzing_text(run_id=run_id, user_id=user_id),
-                self._get_music_curator(run_id=run_id, user_id=user_id),
+            success_criteria="A playlist has been created and the user has been informed about it.",
+            show_members_responses=True,
+            members=[
+                self._get_expert_analyzing_text(session_id=session_id, user_id=user_id),
+                self._get_music_curator(session_id=session_id, user_id=user_id),
                 self._get_spotify_api_expert(
-                    access_token=access_token, run_id=run_id, user_id=user_id
+                    access_token=access_token, session_id=session_id, user_id=user_id
                 ),
             ],
+            enable_agentic_memory=True,
+            show_tool_calls=True,
             debug_mode=True,
+            add_datetime_to_instructions=True,
         )
+
+
+if __name__ == "__main__":
+    import uuid
+    assistant = MusicAssistant()
+    team = assistant.get_team(
+        access_token=os.getenv("SPOTIFY_ACCESS_TOKEN"),
+        session_id=str(uuid.uuid4()),
+        user_id=str(uuid.uuid4()),
+    )
+    team.cli_app("Hello", stream=True)
