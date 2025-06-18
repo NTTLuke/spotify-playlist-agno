@@ -1,6 +1,6 @@
 from typing import AsyncGenerator
 from ..core import get_logger
-from spotify_playlist.spotify_assistant import MusicAssistant
+from spotify_playlist.spotify_assistant import SpotifyMusicAssistant
 
 logger = get_logger(__name__)
 
@@ -12,10 +12,10 @@ class AssistantService:
         self._music_assistant = None
     
     @property
-    def music_assistant(self) -> MusicAssistant:
+    def music_assistant(self) -> SpotifyMusicAssistant:
         """Lazy initialization of music assistant."""
         if self._music_assistant is None:
-            self._music_assistant = MusicAssistant()
+            self._music_assistant = SpotifyMusicAssistant()
         return self._music_assistant
     
     async def chat_stream(

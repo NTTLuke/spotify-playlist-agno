@@ -10,7 +10,7 @@ from agno.tools.serperapi import SerperApiTools
 load_dotenv()
 
 
-class MusicAssistant:
+class SpotifyMusicAssistant:
     def __init__(self):
 
         self.llm = AzureOpenAI(
@@ -164,7 +164,7 @@ class MusicAssistant:
 
 if __name__ == "__main__":
     import uuid
-    assistant = MusicAssistant()
+    assistant = SpotifyMusicAssistant()
     team = assistant.get_team(
         access_token=os.getenv("SPOTIFY_ACCESS_TOKEN"),
         session_id=str(uuid.uuid4()),

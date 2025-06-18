@@ -267,16 +267,70 @@
 
         .user-message {
             background: linear-gradient(135deg, #7c3aed, #8b5cf6);
-            color: white;
+            color: white !important;
             margin-left: 15%;
             text-align: right;
             box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+        }
+
+        .user-message p {
+            color: #ffffff;
         }
 
         .assistant-message {
             background: white;
             border: 1px solid #e5e7eb;
             margin-right: 15%;
+            color: #374151;
+        }
+
+        .assistant-message h1,
+        .assistant-message h2,
+        .assistant-message h3 {
+            color: #2d1b69;
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .assistant-message h1 { font-size: 1.3em; }
+        .assistant-message h2 { font-size: 1.15em; }
+        .assistant-message h3 { font-size: 1em; }
+
+        .assistant-message p {
+            margin: 8px 0;
+            color: #374151;
+            text-align: left;
+        }
+
+        .assistant-message ul,
+        .assistant-message ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+
+        .assistant-message li {
+            margin: 4px 0;
+        }
+
+        .assistant-message code {
+            background: rgba(124, 58, 237, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #7c3aed;
+        }
+
+        .assistant-message pre {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        .assistant-message pre code {
+            background: none;
+            padding: 0;
             color: #374151;
         }
 
@@ -374,57 +428,6 @@
             border-radius: 8px;
         }
 
-        /* Clean markdown styles */
-        .assistant-message h1,
-        .assistant-message h2,
-        .assistant-message h3 {
-            color: #2d1b69;
-            margin: 16px 0 8px 0;
-            font-weight: 600;
-        }
-
-        .assistant-message h1 { font-size: 1.3em; }
-        .assistant-message h2 { font-size: 1.15em; }
-        .assistant-message h3 { font-size: 1em; }
-
-        .assistant-message p {
-            margin: 8px 0;
-            color: #374151;
-            text-align: left;
-        }
-
-        .assistant-message ul,
-        .assistant-message ol {
-            margin: 8px 0;
-            padding-left: 24px;
-        }
-
-        .assistant-message li {
-            margin: 4px 0;
-        }
-
-        .assistant-message code {
-            background: rgba(124, 58, 237, 0.08);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            color: #7c3aed;
-        }
-
-        .assistant-message pre {
-            background: #f3f4f6;
-            padding: 12px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 8px 0;
-        }
-
-        .assistant-message pre code {
-            background: none;
-            padding: 0;
-            color: #374151;
-        }
-
         @media (max-width: 768px) {
             .container {
                 padding: 24px 20px;
@@ -483,34 +486,36 @@
             <div class="suggestions-label">Quick suggestions:</div>
             <div class="bubble-buttons">
                 <button class="bubble-button"
-                    data-text="I want to dance. I love 80s pop music, and I'm feeling a bit down today. So, I need a playlist that can cheer me up.">
+                    data-prompt="I want to dance. I love 80s pop music, and I'm feeling a bit down today. So, I need a playlist that can cheer me up.">
                     <span>🕺 Fun Dance 80s</span>
                 </button>
-                <button class="bubble-button" data-text="Give me the 5 most listened-to EDM songs in 2025.">
+                <button class="bubble-button" data-prompt="Give me the 5 most listened-to EDM songs in 2025.">
                     <span>🎵 Top EDM 2025</span>
                 </button>
-                <button class="bubble-button" data-text="Great! Please create a playlist using these songs">
+                <button class="bubble-button" data-prompt="Great! Please create a playlist using these songs">
                     <span>✨ Create Playlist</span>
                 </button>
-                <button class="bubble-button" data-text="Give me the list of the first 5 playlists on my spotify account">
+                <button class="bubble-button" data-prompt="Give me the list of the first 5 playlists on my spotify account">
                     <span>📱 My Playlists</span>
                 </button>
-                <button class="bubble-button" data-text="Create a playlist with this week's new releases (Friday releases)">
+                <button class="bubble-button" data-prompt="Create a playlist with this week's new releases (Friday releases)">
                     <span>🎉 Friday New Releases</span>
                 </button>
                 <button class="bubble-button"
-                    data-text="I wanna a Country playlist for my road trip">
+                    data-prompt="I wanna a Country playlist for my road trip">
                     <span>🎶 Country Road Trip</span>
                 </button>
             </div>
             
             <div id="chatHistory"></div>
-            <div id="inputContainer">
-                <textarea id="textarea1"
-                    placeholder="Describe your mood, music preferences, or what you want to do..."
-                    rows="3"></textarea>
-                <button id="submitBtn">Send Message</button>
-            </div>
+            <form id="chatForm">
+                <div id="inputContainer">
+                    <textarea id="messageInput"
+                        placeholder="Describe your mood, music preferences, or what you want to do..."
+                        rows="3"></textarea>
+                    <button type="submit" id="submitBtn">Send Message</button>
+                </div>
+            </form>
         </div>
         
         <div id="statusMessage">
@@ -556,181 +561,161 @@
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        document.getElementById('submitBtn').onclick = async function () {
+        function formatResponse(text) {
+            // Basic markdown for lists
+            return marked.parse(text);
+        }
 
-            // Read the cookie
-            const spotyAccessToken = getCookie('accessToken');
-            if (!spotyAccessToken) {
-                alert('Please login with Spotify first');
+        function appendMessage(content, className) {
+            const chatHistory = document.getElementById('chatHistory');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${className}`;
+            messageDiv.innerHTML = formatResponse(content);
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            return messageDiv;
+        }
+        
+        async function checkLoginStatus() {
+            // First, check for the hash from the OAuth redirect
+            if (window.location.hash.toLowerCase() === "#showform") {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('formSection').style.display = 'block';
+                // Clean the hash from the URL
+                history.pushState("", document.title, window.location.pathname + window.location.search);
+                appendMessage("I'm ready! How can I help you create the perfect Spotify playlist?", 'assistant-message');
                 return;
             }
 
-            let textInfo = document.getElementById('textarea1').value;
+            // If no hash, check for an existing session cookie
+            const accessToken = getCookie('accessToken');
+            if (accessToken) {
+                try {
+                    const response = await fetch('/auth/status');
+                    if (response.ok) {
+                        document.getElementById('loginSection').style.display = 'none';
+                        document.getElementById('formSection').style.display = 'block';
+                        appendMessage("I'm ready! How can I help you create the perfect Spotify playlist?", 'assistant-message');
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Auth status check failed", e);
+                }
+            }
+            // If no hash and no valid session, show the login section
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('formSection').style.display = 'none';
+        }
+
+        window.onload = checkLoginStatus;
+
+        document.getElementById('loginBtn').onclick = function () {
+            window.location.href = '/auth/login';
+        };
+
+        /* ===== CHAT LOGIC ===== */
+
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+
+        chatForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            sendMessage(messageInput.value);
+        });
+
+        // Function to send a message
+        async function sendMessage(message, isSuggestion = false) {
+            if (!message.trim()) return;
+
+            const submitBtn = document.getElementById('submitBtn');
             const chatHistory = document.getElementById('chatHistory');
 
-            if (!textInfo.trim()) {
-                alert('Please enter a message');
-                return;
-            }
-
-            // Add user message to chat
-            const userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'chat-message user-message';
-            userMessageDiv.textContent = textInfo;
-            chatHistory.appendChild(userMessageDiv);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-
-            // Clear input
-            document.getElementById('textarea1').value = '';
-
-            // Create assistant message div
-            const assistantMessageDiv = document.createElement('div');
-            assistantMessageDiv.className = 'chat-message assistant-message';
-            chatHistory.appendChild(assistantMessageDiv);
-
-            this.disabled = true;
-            let statusMessageDiv = document.getElementById('statusMessage');
-            statusMessageDiv.style.display = 'block';
+            appendMessage(message, 'user-message');
+            const responseDiv = appendMessage('', 'assistant-message'); 
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Thinking...';
+            if (!isSuggestion) messageInput.value = '';
 
             try {
-                const response = await fetch('/chat', {
+                const accessToken = getCookie('accessToken');
+                if (!accessToken) throw new Error('Not authenticated');
+
+                const response = await fetch('/chat/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'accept': 'application/json',
-                        'X-SPOTIFY-ACCESS-TOKEN': spotyAccessToken
+                        'X-SPOTIFY-ACCESS-TOKEN': getCookie('accessToken')
                     },
                     body: JSON.stringify({
-                        message: textInfo,
-                        assistant: "SPOTIFY_PLAYLIST",
-                        user_id: "theluke",
-                        session_id: sessionId
+                        message: message,
+                        user_id: "user_123", // Replace with actual user ID
+                        session_id: sessionId // Use the session ID variable
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
+                if (!response.body) {
+                    throw new Error("Response body is empty.");
                 }
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                let buffer = '';
-                let content = '';
+                let fullResponse = "";
 
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
-
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop() || '';
-
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = line.slice(6).trim();
-                            if (data) {
-                                try {
-                                    // Try to parse as JSON first
-                                    const chunkData = JSON.parse(data);
-                                    
-                                    if (chunkData.type === 'message') {
-                                        // Main content - append to the message
-                                        content += chunkData.content;
-                                        // Clear thinking elements and show final content
-                                        const thinkingElements = assistantMessageDiv.querySelectorAll('.thinking-text, .tool-call');
-                                        thinkingElements.forEach(el => el.style.display = 'none');
-                                        
-                                        // Create or update main content div
-                                        let mainContent = assistantMessageDiv.querySelector('.main-content');
-                                        if (!mainContent) {
-                                            mainContent = document.createElement('div');
-                                            mainContent.className = 'main-content final-response';
-                                            assistantMessageDiv.appendChild(mainContent);
-                                        }
-                                        mainContent.innerHTML = marked.parse(content);
-                                    } else if (chunkData.type === 'run_started') {
-                                        const startDiv = document.createElement('div');
-                                        startDiv.className = 'thinking-text';
-                                        startDiv.innerHTML = '🚀 ' + chunkData.content;
-                                        assistantMessageDiv.appendChild(startDiv);
-                                    } else if (chunkData.type === 'reasoning_started' || chunkData.type === 'reasoning_step') {
-                                        const reasoningDiv = document.createElement('div');
-                                        reasoningDiv.className = 'thinking-text';
-                                        reasoningDiv.innerHTML = '🤔 ' + chunkData.content;
-                                        assistantMessageDiv.appendChild(reasoningDiv);
-                                    } else if (chunkData.type === 'tool_call_started') {
-                                        const toolDiv = document.createElement('div');
-                                        toolDiv.className = 'tool-call';
-                                        toolDiv.innerHTML = chunkData.content;
-                                        assistantMessageDiv.appendChild(toolDiv);
-                                    } else if (chunkData.type === 'updating_memory') {
-                                        const memoryDiv = document.createElement('div');
-                                        memoryDiv.className = 'thinking-text';
-                                        memoryDiv.innerHTML = '💾 ' + chunkData.content;
-                                        assistantMessageDiv.appendChild(memoryDiv);
-                                    } else if (chunkData.type === 'error') {
-                                        const errorDiv = document.createElement('div');
-                                        errorDiv.style.color = '#ef4444';
-                                        errorDiv.style.fontWeight = '500';
-                                        errorDiv.textContent = chunkData.content;
-                                        assistantMessageDiv.appendChild(errorDiv);
-                                    } else if (chunkData.type === 'run_completed') {
-                                        // Run completed - could add a final animation or cleanup
-                                        if (chunkData.content) {
-                                            content += chunkData.content;
-                                            let mainContent = assistantMessageDiv.querySelector('.main-content');
-                                            if (mainContent) {
-                                                mainContent.innerHTML = marked.parse(content);
-                                            }
-                                        }
-                                    } else {
-                                        // Other types - show as thinking
-                                        if (chunkData.content) {
-                                            const otherDiv = document.createElement('div');
-                                            otherDiv.className = 'thinking-text';
-                                            otherDiv.textContent = chunkData.content;
-                                            assistantMessageDiv.appendChild(otherDiv);
-                                        }
-                                    }
-                                } catch (e) {
-                                    // Fallback for non-JSON data
-                                    content += data;
-                                    assistantMessageDiv.innerHTML = marked.parse(content);
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    // SSE format can send multiple "data:..." chunks at once
+                    const jsonStrings = chunk.match(/data: \{.*\}/g);
+                    
+                    if (jsonStrings) {
+                        jsonStrings.forEach(jsonString => {
+                             try {
+                                const data = jsonString.replace(/^data: /, '');
+                                const parsed = JSON.parse(data);
+                                if (parsed.message) {
+                                    fullResponse += parsed.message;
+                                    responseDiv.innerHTML = formatResponse(fullResponse); // Render markdown
+                                    chatHistory.scrollTop = chatHistory.scrollHeight;
                                 }
-                                
-                                chatHistory.scrollTop = chatHistory.scrollHeight;
+                            } catch(e) {
+                                console.warn("Could not parse chunk:", jsonString, e);
                             }
-                        }
+                        });
                     }
                 }
+
             } catch (error) {
-                assistantMessageDiv.innerHTML = '<span style="color: #ef4444;">Error: ' + error.message + '</span>';
+                console.error('Error:', error);
+                let errorMessage = 'An error occurred. Please try again.';
+                if (error.message === 'Not authenticated') {
+                    errorMessage = 'You are not logged in. Please log in with Spotify first.';
+                    document.getElementById('loginBtn').style.display = 'block';
+                }
+                responseDiv.innerHTML = `<span class="error-text">${errorMessage}</span>`;
             } finally {
-                document.getElementById('submitBtn').disabled = false;
-                statusMessageDiv.style.display = 'none';
+                 submitBtn.disabled = false;
+                 submitBtn.innerHTML = 'Send Message';
             }
-        };
+        }
+        
+        document.querySelectorAll('.bubble-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const message = this.getAttribute('data-prompt');
+                document.getElementById('messageInput').value = message;
+            });
+        });
 
         document.getElementById('newChatBtn').onclick = function () {
-            sessionId = getRandomId();
-            setChatId(sessionId);
-            document.getElementById('chatHistory').innerHTML = ''; // Clear chat history
-            document.getElementById('textarea1').value = ''; // Clear textarea
+            document.getElementById('chatHistory').innerHTML = '';
+            document.getElementById('messageInput').value = '';
+            sessionId = getRandomId(); // Reset session ID
+            setChatId(sessionId); // Update UI
+            appendMessage("I'm ready! How can I help you create the perfect Spotify playlist?", 'assistant-message');
         };
 
-        document.querySelectorAll('.bubble-button').forEach(button => {
-            button.onclick = function () {
-                document.getElementById('textarea1').value = this.getAttribute('data-text');
-            };
-        });
-
-        // Add Enter key support
-        document.getElementById('textarea1').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                document.getElementById('submitBtn').click();
-            }
-        });
     </script>
 </body>
 

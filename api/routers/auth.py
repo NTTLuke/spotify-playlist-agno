@@ -91,3 +91,19 @@ async def logout(response: Response):
     response.delete_cookie(key="refreshToken", path="/", domain="localhost")
     logger.info("User logged out")
     return {"message": "Logged out successfully"}
+
+
+@auth_router.get("/status")
+async def status(request: Request, settings = Depends(get_settings)):
+    """Check authentication status and return user profile."""
+    access_token = request.cookies.get("accessToken")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        spotify_service = SpotifyService(settings)
+        user_profile = await spotify_service.get_user_profile(access_token)
+        return user_profile
+    except Exception as e:
+        logger.error(f"Error fetching user profile: {str(e)}")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")

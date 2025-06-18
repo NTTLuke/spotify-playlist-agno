@@ -9,7 +9,12 @@ from api.core.middleware import LoggingMiddleware
 from api.core.exceptions import SpotifyAPIException, AuthenticationException, AssistantException
 from api.models.responses import ErrorResponse
 from api.routers.auth import auth_router
-from api.routers.chat import chat_router
+from api.routers.chat import get_chat_router
+from agno.app.fastapi.app import FastAPIApp
+from spotify_playlist.spotify_assistant import SpotifyMusicAssistant
+
+import os
+import uuid
 
 
 load_dotenv()
@@ -17,11 +22,22 @@ settings = get_settings()
 setup_logging(settings.log_level)
 logger = get_logger(__name__)
 
-app = FastAPI(
-    title=settings.app_name,
-    version=settings.app_version,
-    debug=settings.debug
+
+music_assistant = SpotifyMusicAssistant()
+music_assistant_team = music_assistant.get_team(
+    access_token=os.getenv("SPOTIFY_ACCESS_TOKEN"),
+    session_id=str(uuid.uuid4()),
+    user_id=str(uuid.uuid4())
 )
+
+fastapi_app = FastAPIApp(
+    teams=[music_assistant_team],
+    name="Spotify Music Assistant",
+    app_id="spotify_music_assistant",
+    description="A Spotify music assistant that can answer questions and help with tasks.",
+)
+
+app = fastapi_app.get_app()
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,8 +47,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(LoggingMiddleware)
 
+app.add_middleware(LoggingMiddleware)
 
 # Exception handlers
 @app.exception_handler(SpotifyAPIException)
@@ -82,6 +98,8 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(auth_router, prefix="/auth", tags=["authentication"])
+
+chat_router = get_chat_router(team=music_assistant_team)
 app.include_router(chat_router, prefix="/chat", tags=["chat"])
 
 # Add callback route at root level to match Spotify redirect URI
@@ -103,5 +121,4 @@ async def health_check():
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host=settings.host, port=settings.port)
+    fastapi_app.serve(app="main:app", port=8000, reload=True)
