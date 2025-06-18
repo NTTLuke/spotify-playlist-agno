@@ -7,6 +7,7 @@ from ..services.assistant import AssistantService
 logger = get_logger(__name__)
 chat_router = APIRouter()
 
+assistant_service = AssistantService()
 
 @chat_router.post("/")
 async def chat(
@@ -21,7 +22,6 @@ async def chat(
     logger.info(f"Chat request from user {body.user_id}: {body.message[:50]}...")
     
     try:
-        assistant_service = AssistantService()
         response_stream = assistant_service.chat_stream(
             message=body.message,
             access_token=x_spotify_access_token,

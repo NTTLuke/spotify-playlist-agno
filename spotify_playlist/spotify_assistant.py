@@ -42,14 +42,13 @@ class MusicAssistant:
         return Agent(
             model=self.llm,
             session_id=session_id,
-            storage=self.storage,
             user_id=user_id,
             name="Expert Text Analyzer",
             role="Expert Text Analyzer for music selection",
             add_history_to_messages=True,
             num_history_responses=3,
             description="""
-            You are an expert in analyzing user input text to understand their emotional tone, intentions, and musical preferences.
+            You are an expert in analyzing user input text to understand their emotional tone, intentions, or musical preferences.
             Your job is to infer mood and genre indications based on how the user describes what they want to listen to, how they feel, or what they're doing.
             """,
            instructions=[
@@ -64,7 +63,6 @@ class MusicAssistant:
             model=self.llm,
             session_id=session_id,
             user_id=user_id,
-            storage=self.storage,
             add_history_to_messages=True,
             num_history_responses=3,
             name="Expert Music Curator",
@@ -99,22 +97,16 @@ class MusicAssistant:
             user_id=user_id,
             name="Spotify API Expert Team",
             role="Spotify API Expert Team",
-            storage=self.storage,
             add_history_to_messages=True,
             num_history_responses=3,
             description="""
             You are a specialist team responsible for executing actions on Spotify, such as searching songs, creating playlists, retrieving listening history, or playing music.
-            You must always act after user preferences have been analyzed and songs have been selected.
-            Every operation must be clearly explained to the user, and you must confirm the context before proceeding.
             """,
             instructions=[
-            "Use the Spotify API to perform operations only after receiving user preferences or selected songs.",
-            "Before creating a playlist, verify the list of URIs and include a confirmation of the playlist title or theme.",
-            "If the user asks to play music, remind them to open the Spotify app on an active device before starting playback.",
-            "When showing playlist info or trends, summarize key elements such as track count, genres, and durations.",
-            "Do not make assumptions—wait for input from the Text Analyzer and Music Curator before taking action."
+            "Analyze the user's request and perform the appropriate action",
+            "If the user asks to play music, remind them to open the Spotify app on an active device before starting playback."
             ],
-            success_criteria="The team has completed all the tasks.",
+            success_criteria="Spotify playlist has been created and the link with the songs has been sent to the user.",
             tools=[SpotifyPlaylistTools(access_token=self.access_token)],
             show_tool_calls=True,
         )
@@ -139,19 +131,18 @@ class MusicAssistant:
             mode="collaborate",
             name="Spotify Music Assistant",
             storage=self.storage,
-            add_history_to_messages=True,
-            num_of_interactions_from_history=10,
-            description="""You are a team leader assistant responsible for helping users create personalized Spotify playlists.
-            To do this, you coordinate with specialized agents who analyze user text, curate songs, and perform Spotify API operations.
-            You must always start by understanding the user's mood or preferences—either from chat history or by asking questions—before assigning any tasks to your team.
-            Playlists must never be created or played without confirming that they match the user's taste.
+            description="""You are a team leader assistant responsible for helping users create personalized Spotify playlists based on Spotify user's preferences.
+            To do this, use specialized agents of the team who analyze user text, curate songs, and perform Spotify API operations.
+            Share found songs before creating the playlist.
+            Follow the instruction and do not ask too much questions to the user.
             """,  
             instructions=[
-                "If the user's mood or preferences are unclear, ask for more context or let the Expert Text Analyzer interpret user input.",
-                "Once the mood or preferences are clear, delegate to team members to perform the tasks.",
+                "Analyze the user request",
+                "Search into latest Spotify user's preferences based on the genre",
+                "Find online the songs that match the user's preferences based on the genre or mood requested by the user.",
                 "Make sure each agent's output is correct before taking the next step.",
-                "Ask the user when you don't understand the user's request. Otherwise proceed.",
-                "Inform the user about the playlist creation with the link to the playlist."
+                "Inform the user about the playlist creation with the link to the playlist.",
+                "If the user asks to play music, remind them to open the Spotify app on an active device before starting playback.",
             ],
             success_criteria="A playlist has been created and the user has been informed about it.",
             show_members_responses=True,
@@ -162,7 +153,9 @@ class MusicAssistant:
                     access_token=access_token, session_id=session_id, user_id=user_id
                 ),
             ],
-            enable_agentic_memory=True,
+            enable_agentic_context=True,
+            enable_team_history=True,
+            num_history_runs=3,
             show_tool_calls=True,
             debug_mode=True,
             add_datetime_to_instructions=True,

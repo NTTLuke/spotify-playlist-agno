@@ -7,7 +7,7 @@
     <title>Spotify AI Playlist Creator</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -16,8 +16,8 @@
         }
 
         body {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f5ff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -26,148 +26,108 @@
             overflow-x: hidden;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 20% 80%, rgba(30, 185, 84, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(29, 185, 84, 0.1) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-        }
-
         .container {
-            max-width: 900px;
+            max-width: 500px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
+            background: white;
             border-radius: 24px;
             padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 8px 25px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(138, 43, 226, 0.1);
             transition: all 0.3s ease;
         }
 
-        .container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15), 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
         h2 {
-            font-size: 2.5em;
+            font-size: 1.8em;
             font-weight: 600;
-            background: linear-gradient(135deg, #1db954, #1ed760);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
+            color: #2d1b69;
+            margin-bottom: 10px;
             text-align: center;
-            line-height: 1.2;
         }
 
         .logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .logo-icon {
-            font-size: 3em;
-            color: #1db954;
-            margin-right: 15px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8em;
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
         }
 
         p {
-            color: #666;
-            font-size: 1.1em;
+            color: #6b7280;
+            font-size: 0.95em;
             margin-bottom: 30px;
             text-align: center;
             font-weight: 400;
         }
 
         .subtitle {
-            font-size: 1.2em;
-            color: #888;
+            font-size: 1em;
+            color: #9ca3af;
             text-align: center;
-            margin-bottom: 40px;
-            font-weight: 300;
+            margin-bottom: 30px;
+            font-weight: 400;
         }
 
         textarea {
             width: 100%;
-            height: 120px;
-            padding: 20px;
-            margin-bottom: 25px;
-            border: 2px solid #e1e5e9;
+            height: 100px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 2px solid #e5e7eb;
             border-radius: 16px;
-            resize: vertical;
-            font-size: 1.1em;
-            font-family: 'Poppins', sans-serif;
+            resize: none;
+            font-size: 0.95em;
+            font-family: 'Inter', sans-serif;
             font-weight: 400;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
+            background: #fafafa;
             transition: all 0.3s ease;
             outline: none;
         }
 
         textarea:focus {
-            border-color: #1db954;
-            box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
-            background: rgba(255, 255, 255, 0.95);
+            border-color: #7c3aed;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
         }
 
         textarea::placeholder {
-            color: #aaa;
-            font-weight: 300;
+            color: #9ca3af;
+            font-weight: 400;
         }
 
         button {
-            background: linear-gradient(135deg, #1db954, #1ed760);
-            color: #fff;
-            padding: 16px 24px;
-            margin: 10px 0;
+            background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+            color: white;
+            padding: 14px 24px;
+            margin: 8px 0;
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            font-size: 1.1em;
+            font-size: 1em;
             font-weight: 500;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
             transition: all 0.3s ease;
             display: inline-block;
             width: 100%;
-            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        button:hover::before {
-            left: 100%;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+            background: linear-gradient(135deg, #6d28d9, #7c3aed);
         }
 
         button:active {
@@ -175,260 +135,165 @@
         }
 
         button:disabled {
-            opacity: 0.7;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
 
-
-        @keyframes bassEffect {
-            0% {
-                transform: scale(1);
-            }
-
-            25% {
-                transform: scale(1.05);
-            }
-
-            50% {
-                transform: scale(1);
-            }
-
-            75% {
-                transform: scale(1.05);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
         #statusMessage {
-            font-size: 1.1em;
-            color: #555;
-            margin: 30px 0;
+            font-size: 0.95em;
+            color: #7c3aed;
+            margin: 20px 0;
             text-align: center;
             display: none;
-            padding: 20px;
-            background: rgba(29, 185, 84, 0.1);
-            border-radius: 16px;
-            border: 1px solid rgba(29, 185, 84, 0.2);
-        }
-
-        #statusMessage img {
-            display: block;
-            margin: 0 auto;
-            animation: bassEffect 2s infinite;
-        }
-
-        #statusMessage div {
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.2em;
+            padding: 16px;
+            background: rgba(124, 58, 237, 0.08);
+            border-radius: 12px;
+            border: 1px solid rgba(124, 58, 237, 0.15);
             font-weight: 500;
-            color: #1db954;
-            margin-top: 10px;
-            animation: pulse 1.5s infinite;
-        }
-
-        .loading-dots {
-            display: inline-block;
         }
 
         .loading-dots::after {
-            content: '.';
-            animation: dots 1.5s steps(5, end) infinite;
+            content: '';
+            animation: dots 1.5s steps(3, end) infinite;
         }
 
         @keyframes dots {
-            0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
-            40% { color: #1db954; text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
-            60% { text-shadow: .25em 0 0 #1db954, .5em 0 0 rgba(0,0,0,0); }
-            80%, 100% { text-shadow: .25em 0 0 #1db954, .5em 0 0 #1db954; }
+            0% { content: ''; }
+            33% { content: '.'; }
+            66% { content: '..'; }
+            100% { content: '...'; }
         }
 
-        /* #statusMessage {
-            font-size: 1.1em;
-            color: #555;
-            margin-top: 20px;
-            /* display: none; */
-        /* } */
-
-        */ #loginBtn {
-            background: linear-gradient(135deg, #191414, #1db954);
-            color: #fff;
-            border-radius: 50px;
-            padding: 18px 32px;
-            font-size: 1.2em;
+        #loginBtn {
+            background: linear-gradient(135deg, #7c3aed, #8b5cf6);
             font-weight: 600;
-            border: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        #loginBtn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #1db954, #1ed760);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        #loginBtn:hover::before {
-            opacity: 1;
-        }
-
-        #loginBtn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(29, 185, 84, 0.4);
         }
 
         #loginBtn i {
-            margin-right: 12px;
-            font-size: 1.3em;
-            position: relative;
-            z-index: 1;
-        }
-
-        #loginBtn span {
-            position: relative;
-            z-index: 1;
+            margin-right: 10px;
+            font-size: 1.2em;
         }
 
         .suggestions-label {
-            font-size: 1.1em;
-            font-weight: 500;
-            color: #333;
-            margin-bottom: 15px;
-            text-align: center;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 12px;
+            text-align: left;
         }
 
         .bubble-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
             margin-bottom: 25px;
         }
 
         .bubble-button {
-            padding: 20px 16px;
-            border: none;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            font-size: 0.95em;
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 20px;
+            background: white;
+            color: #4b5563;
+            font-size: 0.85em;
             font-weight: 500;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            position: relative;
-            overflow: hidden;
-            text-align: center;
-            line-height: 1.4;
-        }
-
-        .bubble-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .bubble-button:hover::before {
-            opacity: 1;
+            box-shadow: none;
+            width: auto;
+            flex: 0 1 auto;
         }
 
         .bubble-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+            border-color: #7c3aed;
+            color: #7c3aed;
+            background: rgba(124, 58, 237, 0.05);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
         }
 
         .bubble-button span {
-            position: relative;
-            z-index: 1;
-        }
-
-        .bubble-button:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
-        }
-
-        .header-image {
-            display: block;
-            margin: 0 auto 15px;
-            max-width: 100%;
-            height: auto;
-            border-radius: 16px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            display: inline;
         }
 
         #chatContainer {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
             margin-top: 20px;
         }
 
         #chatHistory {
-            max-height: 400px;
+            max-height: 350px;
             overflow-y: auto;
-            padding: 20px;
-            background: rgba(248, 249, 250, 0.8);
+            padding: 16px;
+            background: #f9fafb;
             border-radius: 16px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
+            border: 1px solid #e5e7eb;
         }
 
         #chatHistory:empty {
             display: none;
         }
 
+        #chatHistory::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chatHistory::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 3px;
+        }
+
+        #chatHistory::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        #chatHistory::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
         .chat-message {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 12px;
-            line-height: 1.6;
-            font-family: 'Poppins', sans-serif;
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.5;
+            font-size: 0.9em;
+            font-family: 'Inter', sans-serif;
         }
 
         .user-message {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #7c3aed, #8b5cf6);
             color: white;
-            margin-left: 20%;
+            margin-left: 15%;
             text-align: right;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
         }
 
         .assistant-message {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(29, 185, 84, 0.2);
-            margin-right: 20%;
+            background: white;
+            border: 1px solid #e5e7eb;
+            margin-right: 15%;
+            color: #374151;
         }
 
         .thinking-text {
-            font-size: 0.85em;
-            color: #888;
+            font-size: 0.8em;
+            color: #9ca3af;
             font-style: italic;
-            margin-bottom: 8px;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.03);
+            margin-bottom: 6px;
+            padding: 6px 8px;
+            background: rgba(156, 163, 175, 0.1);
             border-radius: 8px;
             animation: fadeIn 0.3s ease-in;
         }
 
         .tool-call {
-            font-size: 0.9em;
-            color: #1db954;
+            font-size: 0.85em;
+            color: #7c3aed;
             font-weight: 500;
             margin: 4px 0;
             padding-left: 20px;
@@ -439,34 +304,21 @@
             content: '⚡';
             position: absolute;
             left: 0;
-            animation: pulse 1s infinite;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
+            from { opacity: 0; transform: translateY(-3px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .thinking-dots::after {
-            content: '';
-            animation: ellipsis 1.5s infinite;
-        }
-
-        @keyframes ellipsis {
-            0% { content: ''; }
-            25% { content: '.'; }
-            50% { content: '..'; }
-            75% { content: '...'; }
-        }
-
         .final-response {
-            animation: slideIn 0.5s ease-out;
+            animation: slideIn 0.4s ease-out;
         }
 
         @keyframes slideIn {
             from { 
                 opacity: 0; 
-                transform: translateX(-20px);
+                transform: translateX(-10px);
             }
             to { 
                 opacity: 1; 
@@ -481,21 +333,29 @@
         }
 
         #newChatBtn {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            margin-bottom: 20px;
-            font-size: 1em;
-            padding: 12px 20px;
+            background: transparent;
+            color: #7c3aed;
+            border: 2px solid #7c3aed;
+            margin-bottom: 16px;
+            font-size: 0.9em;
+            padding: 10px 20px;
+            box-shadow: none;
+        }
+
+        #newChatBtn:hover {
+            background: rgba(124, 58, 237, 0.05);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
         }
 
         .footer-info {
-            margin-top: 30px;
+            margin-top: 24px;
             text-align: center;
-            font-size: 0.9em;
-            color: #888;
+            font-size: 0.8em;
+            color: #9ca3af;
         }
 
         .footer-info a {
-            color: #1db954;
+            color: #7c3aed;
             text-decoration: none;
             font-weight: 500;
         }
@@ -506,31 +366,85 @@
 
         #chatIdLabel {
             text-align: center;
-            font-size: 0.9em;
-            color: #999;
-            margin-top: 20px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.05);
+            font-size: 0.75em;
+            color: #d1d5db;
+            margin-top: 16px;
+            padding: 8px;
+            background: #f9fafb;
             border-radius: 8px;
+        }
+
+        /* Clean markdown styles */
+        .assistant-message h1,
+        .assistant-message h2,
+        .assistant-message h3 {
+            color: #2d1b69;
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .assistant-message h1 { font-size: 1.3em; }
+        .assistant-message h2 { font-size: 1.15em; }
+        .assistant-message h3 { font-size: 1em; }
+
+        .assistant-message p {
+            margin: 8px 0;
+            color: #374151;
+            text-align: left;
+        }
+
+        .assistant-message ul,
+        .assistant-message ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+
+        .assistant-message li {
+            margin: 4px 0;
+        }
+
+        .assistant-message code {
+            background: rgba(124, 58, 237, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #7c3aed;
+        }
+
+        .assistant-message pre {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        .assistant-message pre code {
+            background: none;
+            padding: 0;
+            color: #374151;
         }
 
         @media (max-width: 768px) {
             .container {
-                padding: 30px 20px;
+                padding: 24px 20px;
                 margin: 10px;
             }
 
             h2 {
-                font-size: 2em;
-            }
-
-            .bubble-buttons {
-                grid-template-columns: 1fr;
+                font-size: 1.5em;
             }
 
             .bubble-button {
-                font-size: 0.9em;
-                padding: 18px 14px;
+                font-size: 0.8em;
+                padding: 8px 14px;
+            }
+
+            .user-message,
+            .assistant-message {
+                margin-left: 0;
+                margin-right: 0;
+                text-align: left;
             }
         }
     </style>
@@ -539,59 +453,72 @@
 <body>
     <div class="container" id="loginSection">
         <div class="logo-container">
-            <i class="fab fa-spotify logo-icon"></i>
+            <div class="logo-icon">
+                <i class="fab fa-spotify"></i>
+            </div>
         </div>
         <h2>Spotify AI Playlist Creator</h2>
         <p class="subtitle">Create personalized playlists with the power of AI</p>
         <button id="loginBtn">
             <i class="fab fa-spotify"></i>
-            <span>Connect with Spotify</span>
+            Connect with Spotify
         </button>
         <p>(Premium account required)</p>
     </div>
 
     <div class="container" id="formSection">
         <div class="logo-container">
-            <i class="fab fa-spotify logo-icon"></i>
+            <div class="logo-icon">
+                <i class="fab fa-spotify"></i>
+            </div>
         </div>
-        <h2>Spotify AI Playlist Creator</h2>
+        <h2>AI Playlist Creator</h2>
         <p class="subtitle">Tell me your mood, and I'll create the perfect playlist</p>
 
-        <div class="suggestions-label">Quick Suggestions:</div>
-        <div class="bubble-buttons">
-            <button class="bubble-button"
-                data-text="I want to dance. I love 80s pop music, and I'm feeling a bit down today. So, I need a playlist that can cheer me up.">
-                <span>🕺 Fun Dance 80s Vibes</span>
-            </button>
-            <button class="bubble-button" data-text="Give me the 5 most listened-to EDM songs in 2023.">
-                <span>🎵 Top 5 EDM Hits 2023</span>
-            </button>
-            <button class="bubble-button" data-text="Great! Please create a playlist using these songs">
-                <span>✨ Create Playlist from Songs</span>
-            </button>
-            <button class="bubble-button" data-text="Give me the list of the first 5 playlists on my spotify account">
-                <span>📱 My Spotify Playlists</span>
-            </button>
-            <button class="bubble-button" data-text="Create a playlist with this week's new releases (Friday releases)">
-                <span>🎉 Friday New Releases</span>
-            </button>
-        </div>
         <button id="newChatBtn">🔄 New Chat</button>
+        
         <div id="chatContainer">
+            
+            
+            <div class="suggestions-label">Quick suggestions:</div>
+            <div class="bubble-buttons">
+                <button class="bubble-button"
+                    data-text="I want to dance. I love 80s pop music, and I'm feeling a bit down today. So, I need a playlist that can cheer me up.">
+                    <span>🕺 Fun Dance 80s</span>
+                </button>
+                <button class="bubble-button" data-text="Give me the 5 most listened-to EDM songs in 2025.">
+                    <span>🎵 Top EDM 2025</span>
+                </button>
+                <button class="bubble-button" data-text="Great! Please create a playlist using these songs">
+                    <span>✨ Create Playlist</span>
+                </button>
+                <button class="bubble-button" data-text="Give me the list of the first 5 playlists on my spotify account">
+                    <span>📱 My Playlists</span>
+                </button>
+                <button class="bubble-button" data-text="Create a playlist with this week's new releases (Friday releases)">
+                    <span>🎉 Friday New Releases</span>
+                </button>
+                <button class="bubble-button"
+                    data-text="I wanna a Country playlist for my road trip">
+                    <span>🎶 Country Road Trip</span>
+                </button>
+            </div>
+            
             <div id="chatHistory"></div>
             <div id="inputContainer">
                 <textarea id="textarea1"
-                    placeholder="Describe your mood, music preferences, or what you want to do... 🎵"
+                    placeholder="Describe your mood, music preferences, or what you want to do..."
                     rows="3"></textarea>
-                <button id="submitBtn">🎶 Send Message</button>
+                <button id="submitBtn">Send Message</button>
             </div>
         </div>
+        
         <div id="statusMessage">
-            <div>AI is thinking<span class="loading-dots"></span></div>
+            AI is thinking<span class="loading-dots"></span>
         </div>
+        
         <div class="footer-info">
-            <p>Powered by <a href="https://github.com/phidatahq/phidata" target="_blank">Agno AI Framework</a> • 
-            <a href="https://github.com/NTTLuke/spotify-playlist-phidata" target="_blank">View on GitHub</a></p>
+            <p>Powered by <a href="https://github.com/agno-agi" target="_blank">Agno AI</a></p>
         </div>
         <div id="chatIdLabel">Session ID: <span id="chatId"></span></div>
     </div>
@@ -743,8 +670,8 @@
                                         assistantMessageDiv.appendChild(memoryDiv);
                                     } else if (chunkData.type === 'error') {
                                         const errorDiv = document.createElement('div');
-                                        errorDiv.style.color = 'red';
-                                        errorDiv.style.fontWeight = 'bold';
+                                        errorDiv.style.color = '#ef4444';
+                                        errorDiv.style.fontWeight = '500';
                                         errorDiv.textContent = chunkData.content;
                                         assistantMessageDiv.appendChild(errorDiv);
                                     } else if (chunkData.type === 'run_completed') {
@@ -777,7 +704,7 @@
                     }
                 }
             } catch (error) {
-                assistantMessageDiv.innerHTML = '<span style="color: red;">Error: ' + error.message + '</span>';
+                assistantMessageDiv.innerHTML = '<span style="color: #ef4444;">Error: ' + error.message + '</span>';
             } finally {
                 document.getElementById('submitBtn').disabled = false;
                 statusMessageDiv.style.display = 'none';
