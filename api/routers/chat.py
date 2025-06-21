@@ -5,7 +5,7 @@ import json
 from ..core import get_logger
 from ..models.requests import ChatRequest
 from ..dependencies import get_spotify_token
-from ..assistant_manager import assistant_manager
+from spotify_playlist.spotify_assistant import SpotifyMusicAssistant
 
 from agno.run.team import TeamRunEvent
 
@@ -22,22 +22,23 @@ def get_chat_router() -> APIRouter:
     ) -> StreamingResponse:
         """
         Send a message to the assistant and stream the response.
-        This endpoint now manages state by using the AssistantManager.
+        Session state is managed by PostgreSQL via session_id.
         """
         logger.info(f"Chat request for session {body.session_id}: {body.message[:50]}...")
 
         try:
-            # 1. Get the stateful assistant instance for this session
-            assistant = assistant_manager.get_or_create_assistant(body.session_id)
+            # 1. Create a new assistant instance per request (stateless)
+            assistant = SpotifyMusicAssistant()
 
             # 2. Get a team configured with the user's current token and session details
+            # The session state is managed by PostgreSQL via the session_id
             team = assistant.get_team(
                 access_token=access_token,
                 session_id=body.session_id,
                 user_id=body.user_id
             )
 
-            # 3. Run the chat logic with the stateful and correctly configured team
+            # 3. Run the chat logic with the team
             async def event_stream():
                 async for chunk in await team.arun(body.message, stream=True):
                     if chunk.event == TeamRunEvent.run_started.value:

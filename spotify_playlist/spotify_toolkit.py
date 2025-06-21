@@ -191,7 +191,7 @@ class SpotifyPlaylistTools(Toolkit):
 
         Args:
             playlist_id: The ID of the playlist to play.
-
+            device_name: The name of the device to play the playlist on.
         Returns:
             The status of the playback operation.
         """

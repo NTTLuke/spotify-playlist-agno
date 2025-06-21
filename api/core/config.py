@@ -17,19 +17,14 @@ class Settings(BaseSettings):
     spotify_client_id: Optional[str] = None
     spotify_client_secret: Optional[str] = None
     spotify_redirect_uri: str = "http://localhost:8000/callback"
-    spotify_bot_redirect_uri: str = "http://localhost:8000/bot-callback"
     spotify_scope: str = "user-read-private user-read-email playlist-modify-public playlist-modify-private user-top-read user-modify-playback-state user-read-playback-state user-read-recently-played user-follow-read playlist-read-private playlist-read-collaborative"
     spotify_access_token: Optional[str] = None
-    
-    # Security settings
-    secret_key: str = "your-secret-key-here-change-in-production"
-    access_token_expire_minutes: int = 60
     
     # CORS settings
     cors_origins: list[str] = ["http://localhost:8000", "http://127.0.0.1:8000"]
     
     # Database settings
-    db_url: str = "postgresql://ailuke:mypassword123456@localhost:5432/aimemory"
+    db_url: str = "postgresql://postgres:postgres@localhost:5432/postgres"
     postgres_url: Optional[str] = None
     
     # Azure OpenAI settings
@@ -41,7 +36,6 @@ class Settings(BaseSettings):
     
     # Other API keys
     serper_api_key: Optional[str] = None
-    telegram_bot_token: Optional[str] = None
     
     # Logging
     log_level: str = "INFO"
