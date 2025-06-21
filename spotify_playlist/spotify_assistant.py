@@ -6,15 +6,19 @@ from agno.team.team import Team
 from spotify_playlist.spotify_toolkit import SpotifyPlaylistTools
 from agno.storage.agent.postgres import PostgresAgentStorage
 from agno.tools.serperapi import SerperApiTools
+from api.core import get_logger
 
 load_dotenv()
+logger = get_logger(__name__)
 
 
 class SpotifyMusicAssistant:
     def __init__(self):
-
+        logger.info("Initializing SpotifyMusicAssistant")
+        
+        # TODO: change the model based on your needs.
         self.llm = AzureOpenAI(
-            id="gpt-4o", 
+            id="gpt-luke", 
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),
             azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"), 
             azure_deployment=os.getenv("AZURE_DEPLOYMENT_NAME"),
@@ -37,6 +41,7 @@ class SpotifyMusicAssistant:
             raise ValueError(f"Error creating the storage: {e}")
 
         self.access_token = None
+        logger.info("SpotifyMusicAssistant initialized successfully")
 
     def _get_expert_analyzing_text(self, session_id: str, user_id: str) -> Agent:
         return Agent(
@@ -52,7 +57,7 @@ class SpotifyMusicAssistant:
             Your job is to infer mood and genre indications based on how the user describes what they want to listen to, how they feel, or what they're doing.
             """,
            instructions=[
-                "Carefully read the user’s text and analyze emotional or situational context (e.g., 'feeling sad', 'need focus music').",
+                "Carefully read the user's text and analyze emotional or situational context (e.g., 'feeling sad', 'need focus music').",
                 "Return a short summary of the inferred mood and the music genre(s) that match it.",
                 "Use decades of music experience to map nuanced emotions or scenarios to appropriate genres."
             ]
@@ -112,16 +117,19 @@ class SpotifyMusicAssistant:
         )
 
     def get_team(self, access_token: str, session_id: str, user_id: str) -> Team:
-
+        logger.info(f"Creating team for session_id: {session_id} and user_id: {user_id}")
         if not access_token:
+            logger.error("Access token is required to create the SpotifyPlaylistTeam.")
             raise ValueError(
                 "Access token is required to create the SpotifyPlaylistTeam."
             )
         
         if not session_id:
+            logger.error("Session ID is required to create the SpotifyPlaylistTeam.")
             raise ValueError("Session ID is required to create the SpotifyPlaylistTeam.")
 
         if not user_id:
+            logger.error("User ID is required to create the SpotifyPlaylistTeam.")
             raise ValueError("User ID is required to create the SpotifyPlaylistTeam.")
 
         return Team(
@@ -130,7 +138,7 @@ class SpotifyMusicAssistant:
             user_id=user_id,
             mode="collaborate",
             name="Spotify Music Assistant",
-            storage=self.storage,
+            storage=self.storage if self.storage else None,
             description="""You are a team leader assistant responsible for helping users create personalized Spotify playlists based on Spotify user's preferences.
             To do this, use specialized agents of the team who analyze user text, curate songs, and perform Spotify API operations.
             Share found songs before creating the playlist.

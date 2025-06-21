@@ -4,7 +4,7 @@ requires-python = ">=3.12"
 
 [[package]]
 name = "agno"
-version = "1.5.10"
+version = "1.6.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docstring-parser" },
@@ -20,9 +20,9 @@ dependencies = [
     { name = "typer" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/03/00/e20a9296ca531a974f168021b84cfaa00ae99b9360551999e8232045bf3a/agno-1.5.10.tar.gz", hash = "sha256:048657aec50f2c776eac755cef9b04fde61ddebe6c542f5f5f4376314d9cbd60", size = 624445, upload-time = "2025-06-07T04:30:00.061Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/48/636a4dab4ea9ccf447a687b16296540d354fbdb746e2261b92afefed0725/agno-1.6.3.tar.gz", hash = "sha256:c7437bce9a331b7d63f85e0c88c5656c21f0e74157687dc27e765c942731c064", size = 639893, upload-time = "2025-06-18T10:06:02.482Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/55/3334b036bbc6e3cfb7404c8d4bdf17b636cb2963f7f4d726953cb2818335/agno-1.5.10-py3-none-any.whl", hash = "sha256:4d8f15d8189445fb37017cd0c19a986bb01a63649bc119bee6f445f8b5986452", size = 836364, upload-time = "2025-06-07T04:29:57.915Z" },
+    { url = "https://files.pythonhosted.org/packages/74/6b/2dd53bf08000f052dbdf186029cf108c5ae0c1afd9d2ad32c175eea415b5/agno-1.6.3-py3-none-any.whl", hash = "sha256:97b119ace30557e13afa3d80385a410aeed7e92a8ad3cbb21c32d054a8677965", size = 857558, upload-time = "2025-06-18T10:06:00.854Z" },
 ]
 
 [[package]]
@@ -47,6 +47,7 @@ dependencies = [
     { name = "propcache" },
     { name = "yarl" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/fc/76/cc6f37a12372dd72891dad5ffc3fc71375c2f92bb4a59f7ac11119332559/aiohttp-3.12.10.tar.gz", hash = "sha256:a9871b1b1381f8d8241f3ff3de5fcb6e2fdcfe8af43c35bb0496b8be550c5fb9", size = 7810445, upload-time = "2025-06-07T12:27:42.107Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e3/4d/1745c50186ac3f50df2c67727d87270dae0376fd29cfc02d49884be61337/aiohttp-3.12.10-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:986ec1b4ff9ca0842259d943b925af2a546ca055cb6ac22062cf3443e9ad844b", size = 699028, upload-time = "2025-06-07T12:25:43.216Z" },
     { url = "https://files.pythonhosted.org/packages/a1/9c/a39182ef5eb3d3dc5844c9421d0e743acbce2a2f8b9dd44946797c998301/aiohttp-3.12.10-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:cd4560a16f6370c395bc9022ca6d785dd3dc15873dd3846039bb1c2c4d515ed0", size = 473645, upload-time = "2025-06-07T12:25:44.97Z" },
@@ -912,7 +913,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "agno", specifier = ">=1.5.10" },
+    { name = "agno", specifier = "==1.6.3" },
     { name = "aiohttp", specifier = ">=3.12.10" },
     { name = "azure-ai-inference", specifier = ">=1.0.0b9" },
     { name = "fastapi" },

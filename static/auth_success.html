@@ -4,9 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Connected Successfully</title>
+    <title>Spotify Connected Successfully - Retro Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -15,104 +14,270 @@
         }
 
         body {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1db954 0%, #1ed760 100%);
+            font-family: 'Courier New', Courier, monospace;
+            background: #f8f5ff;
+            background-image: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 0, 0, 0.03) 0px,
+                    transparent 1px,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.03) 3px
+                );
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.02) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 1;
         }
 
         .success-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 60px 40px;
+            background: white;
+            border: 4px solid #2d1b69;
+            border-style: double;
+            padding: 60px 80px;
             text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            max-width: 500px;
-            width: 100%;
-            animation: slideUp 0.6s ease-out;
+            box-shadow: 
+                8px 8px 0px rgba(138, 43, 226, 0.3),
+                16px 16px 0px rgba(138, 43, 226, 0.1);
+            max-width: 700px;
+            width: 90%;
+            position: relative;
+            z-index: 2;
+            animation: terminalBoot 0.8s ease-out;
         }
 
-        @keyframes slideUp {
-            from {
+        .success-container::before {
+            content: "╔═══════════════════════════════════════════════════════╗";
+            position: absolute;
+            top: -15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #7c3aed;
+            font-size: 14px;
+            letter-spacing: -1px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .success-container::after {
+            content: "╚═══════════════════════════════════════════════════════╝";
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #7c3aed;
+            font-size: 14px;
+            letter-spacing: -1px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        @keyframes terminalBoot {
+            0% {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: scale(0.95) translateY(20px);
             }
-            to {
+            50% {
+                opacity: 0.5;
+            }
+            100% {
                 opacity: 1;
-                transform: translateY(0);
+                transform: scale(1) translateY(0);
             }
         }
 
         .success-icon {
             font-size: 4em;
             color: #1db954;
-            margin-bottom: 20px;
-            animation: bounce 1s ease-in-out infinite alternate;
+            margin-bottom: 30px;
+            position: relative;
+            display: inline-block;
+            animation: pixelBlink 2s ease-in-out infinite;
         }
 
-        @keyframes bounce {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-10px); }
+        .success-icon::before {
+            content: "[";
+            position: absolute;
+            left: -30px;
+            color: #7c3aed;
+            font-weight: bold;
+            animation: bracketPulse 1s ease-in-out infinite;
+        }
+
+        .success-icon::after {
+            content: "]";
+            position: absolute;
+            right: -30px;
+            color: #7c3aed;
+            font-weight: bold;
+            animation: bracketPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pixelBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        @keyframes bracketPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         h1 {
-            font-size: 2.5em;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            line-height: 1.2;
+            font-size: 2em;
+            font-weight: bold;
+            color: #2d1b69;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 3px 3px 0px rgba(124, 58, 237, 0.2);
+            position: relative;
+        }
+
+        h1::before {
+            content: ">>> ";
+            color: #7c3aed;
+            font-size: 0.8em;
+        }
+
+        h1::after {
+            content: " <<<";
+            color: #7c3aed;
+            font-size: 0.8em;
         }
 
         .subtitle {
-            font-size: 1.2em;
-            color: #666;
+            font-size: 1.1em;
+            color: #6b7280;
             margin-bottom: 40px;
-            font-weight: 400;
+            font-weight: normal;
+            border-top: 1px dashed #e5e7eb;
+            border-bottom: 1px dashed #e5e7eb;
+            padding: 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .continue-btn {
-            background: linear-gradient(135deg, #1db954, #1ed760);
+            background: #7c3aed;
             color: white;
-            padding: 16px 32px;
-            border: none;
-            border-radius: 50px;
+            padding: 16px 40px;
+            border: 3px solid #2d1b69;
+            border-style: outset;
             font-size: 1.1em;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(29, 185, 84, 0.3);
+            transition: all 0.1s ease;
+            box-shadow: 
+                4px 4px 0px #2d1b69,
+                6px 6px 0px rgba(124, 58, 237, 0.3);
             text-decoration: none;
             display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
         }
 
         .continue-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(29, 185, 84, 0.4);
+            transform: translate(-2px, -2px);
+            box-shadow: 
+                6px 6px 0px #2d1b69,
+                8px 8px 0px rgba(124, 58, 237, 0.3);
+        }
+
+        .continue-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 
+                2px 2px 0px #2d1b69,
+                3px 3px 0px rgba(124, 58, 237, 0.3);
+            border-style: inset;
+        }
+
+        .continue-btn i {
+            margin-right: 10px;
         }
 
         .loading-text {
-            color: #888;
+            color: #9ca3af;
             font-size: 0.9em;
-            margin-top: 20px;
+            margin-top: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            padding: 10px;
+            border: 1px dotted #9ca3af;
+            background: rgba(156, 163, 175, 0.05);
+        }
+
+        .loading-text::after {
+            content: '';
+            animation: dots 1.5s steps(3, end) infinite;
+        }
+
+        @keyframes dots {
+            0% { content: ''; }
+            33% { content: '.'; }
+            66% { content: '..'; }
+            100% { content: '...'; }
+        }
+
+        .terminal-output {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 10px;
+            color: #7c3aed;
+            opacity: 0.6;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            animation: typewriter 2s steps(20) forwards;
+        }
+
+        @keyframes typewriter {
+            from { width: 0; }
+            to { width: 100%; }
         }
 
         @media (max-width: 768px) {
             .success-container {
                 padding: 40px 30px;
+                max-width: 500px;
             }
 
             h1 {
-                font-size: 2em;
+                font-size: 1.5em;
             }
 
             .success-icon {
                 font-size: 3em;
+            }
+
+            .success-icon::before,
+            .success-icon::after {
+                display: none;
+            }
+
+            .continue-btn {
+                font-size: 0.95em;
+                padding: 14px 30px;
             }
         }
     </style>

@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "agno>=1.5.10",
+    "agno==1.6.3",
     "httpx",
     "python-dotenv",
     "fastapi",

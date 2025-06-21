@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Request, HTTPException
+import os
+import uuid
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -6,39 +8,49 @@ from dotenv import load_dotenv
 
 from api.core import setup_logging, get_settings, get_logger
 from api.core.middleware import LoggingMiddleware
-from api.core.exceptions import SpotifyAPIException, AuthenticationException, AssistantException
+from api.core.exception_handlers import register_exception_handlers
 from api.models.responses import ErrorResponse
 from api.routers.auth import auth_router
 from api.routers.chat import get_chat_router
 from agno.app.fastapi.app import FastAPIApp
+from api.routers.auth import callback as auth_callback
 from spotify_playlist.spotify_assistant import SpotifyMusicAssistant
 
-import os
-import uuid
 
-
+# Load environment variables
 load_dotenv()
+
+# Get settings
 settings = get_settings()
+
+# Setup logging
 setup_logging(settings.log_level)
+
+# Get logger
 logger = get_logger(__name__)
 
-
-music_assistant = SpotifyMusicAssistant()
-music_assistant_team = music_assistant.get_team(
-    access_token=os.getenv("SPOTIFY_ACCESS_TOKEN"),
-    session_id=str(uuid.uuid4()),
-    user_id=str(uuid.uuid4())
+# Create a "template" team for platform registration.
+# This team is initialized with a dummy token and is NOT used for request processing.
+# Its purpose is to satisfy the FastAPIApp constructor requirement.
+template_music_assistant = SpotifyMusicAssistant()
+template_team = template_music_assistant.get_team(
+    access_token="dummy-token-for-startup",
+    session_id="template-session",
+    user_id="template-user"
 )
 
+# Create FastAPIApp
 fastapi_app = FastAPIApp(
-    teams=[music_assistant_team],
+    teams=[template_team],
     name="Spotify Music Assistant",
     app_id="spotify_music_assistant",
-    description="A Spotify music assistant that can answer questions and help with tasks.",
+    description="A Spotify music assistant that can help user to create playlists based on user's requests.",
 )
 
+# Get the FastAPI app from the FastAPIApp
 app = fastapi_app.get_app()
 
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -47,63 +59,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# Register exception handlers
 app.add_middleware(LoggingMiddleware)
 
-# Exception handlers
-@app.exception_handler(SpotifyAPIException)
-async def spotify_exception_handler(request: Request, exc: SpotifyAPIException):
-    logger.error(f"Spotify API error: {exc.detail}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=ErrorResponse(error="Spotify API Error", detail=exc.detail).model_dump()
-    )
+# Register exception handlers
+register_exception_handlers(app)
 
-
-@app.exception_handler(AuthenticationException)
-async def auth_exception_handler(request: Request, exc: AuthenticationException):
-    logger.error(f"Authentication error: {exc.detail}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=ErrorResponse(error="Authentication Error", detail=exc.detail).model_dump()
-    )
-
-
-@app.exception_handler(AssistantException)
-async def assistant_exception_handler(request: Request, exc: AssistantException):
-    logger.error(f"Assistant error: {exc.detail}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=ErrorResponse(error="Assistant Error", detail=exc.detail).model_dump()
-    )
-
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    logger.error(f"HTTP error: {exc.detail}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=ErrorResponse(error="HTTP Error", detail=exc.detail).model_dump()
-    )
-
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unexpected error: {str(exc)}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content=ErrorResponse(error="Internal Server Error", detail="An unexpected error occurred").model_dump()
-    )
-
+# Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Register routers
 app.include_router(auth_router, prefix="/auth", tags=["authentication"])
 
-chat_router = get_chat_router(team=music_assistant_team)
+# Register chat router
+chat_router = get_chat_router()
 app.include_router(chat_router, prefix="/chat", tags=["chat"])
 
 # Add callback route at root level to match Spotify redirect URI
-from api.routers.auth import callback as auth_callback
 app.add_api_route("/callback", auth_callback, methods=["GET"])
 
 

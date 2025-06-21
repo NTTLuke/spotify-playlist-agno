@@ -4,10 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify AI Playlist Creator</title>
+    <title>Spotify AI Playlist Creator - Retro Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -16,8 +15,16 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             background: #f8f5ff;
+            background-image: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 0, 0, 0.03) 0px,
+                    transparent 1px,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.03) 3px
+                );
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -26,22 +33,71 @@
             overflow-x: hidden;
         }
 
-        .container {
-            max-width: 500px;
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.02) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 90%;
             background: white;
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(138, 43, 226, 0.1);
+            border: 4px solid #2d1b69;
+            border-style: double;
+            padding: 50px 60px;
+            box-shadow: 
+                8px 8px 0px rgba(138, 43, 226, 0.3),
+                16px 16px 0px rgba(138, 43, 226, 0.1);
             transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .container::before {
+            content: "╔═════════════════════════════════════════════════════════════════════════════╗";
+            position: absolute;
+            top: -15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #7c3aed;
+            font-size: 14px;
+            letter-spacing: -1px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .container::after {
+            content: "╚═════════════════════════════════════════════════════════════════════════════╝";
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #7c3aed;
+            font-size: 14px;
+            letter-spacing: -1px;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         h2 {
-            font-size: 1.8em;
-            font-weight: 600;
+            font-size: 2.2em;
+            font-weight: bold;
             color: #2d1b69;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 3px 3px 0px rgba(124, 58, 237, 0.2);
         }
 
         .logo-container {
@@ -52,16 +108,35 @@
         }
 
         .logo-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #7c3aed, #a855f7);
-            border-radius: 20px;
+            width: 80px;
+            height: 80px;
+            background: #7c3aed;
+            border: 3px solid #2d1b69;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.8em;
-            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+            font-size: 2.4em;
+            position: relative;
+            box-shadow: 
+                3px 3px 0px #2d1b69,
+                6px 6px 0px rgba(124, 58, 237, 0.3);
+        }
+
+        .logo-icon::before {
+            content: "▓▓▓";
+            position: absolute;
+            top: -20px;
+            color: #a855f7;
+            font-size: 10px;
+        }
+
+        .logo-icon::after {
+            content: "▓▓▓";
+            position: absolute;
+            bottom: -20px;
+            color: #a855f7;
+            font-size: 10px;
         }
 
         p {
@@ -69,7 +144,8 @@
             font-size: 0.95em;
             margin-bottom: 30px;
             text-align: center;
-            font-weight: 400;
+            font-weight: normal;
+            font-family: 'Courier New', monospace;
         }
 
         .subtitle {
@@ -77,20 +153,23 @@
             color: #9ca3af;
             text-align: center;
             margin-bottom: 30px;
-            font-weight: 400;
+            font-weight: normal;
+            border-top: 1px dashed #e5e7eb;
+            border-bottom: 1px dashed #e5e7eb;
+            padding: 10px 0;
         }
 
         textarea {
             width: 100%;
-            height: 100px;
-            padding: 16px;
+            height: 120px;
+            padding: 20px;
             margin-bottom: 20px;
-            border: 2px solid #e5e7eb;
-            border-radius: 16px;
+            border: 2px solid #2d1b69;
+            border-style: groove;
             resize: none;
-            font-size: 0.95em;
-            font-family: 'Inter', sans-serif;
-            font-weight: 400;
+            font-size: 1.05em;
+            font-family: 'Courier New', monospace;
+            font-weight: normal;
             background: #fafafa;
             transition: all 0.3s ease;
             outline: none;
@@ -99,39 +178,49 @@
         textarea:focus {
             border-color: #7c3aed;
             background: white;
-            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+            box-shadow: inset 2px 2px 4px rgba(124, 58, 237, 0.2);
         }
 
         textarea::placeholder {
             color: #9ca3af;
-            font-weight: 400;
+            font-weight: normal;
         }
 
         button {
-            background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+            background: #7c3aed;
             color: white;
             padding: 14px 24px;
             margin: 8px 0;
-            border: none;
-            border-radius: 12px;
+            border: 3px solid #2d1b69;
+            border-style: outset;
             cursor: pointer;
             font-size: 1em;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s ease;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.1s ease;
             display: inline-block;
             width: 100%;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+            box-shadow: 
+                4px 4px 0px #2d1b69,
+                6px 6px 0px rgba(124, 58, 237, 0.3);
+            position: relative;
         }
 
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
-            background: linear-gradient(135deg, #6d28d9, #7c3aed);
+            transform: translate(-2px, -2px);
+            box-shadow: 
+                6px 6px 0px #2d1b69,
+                8px 8px 0px rgba(124, 58, 237, 0.3);
         }
 
         button:active {
-            transform: translateY(0);
+            transform: translate(2px, 2px);
+            box-shadow: 
+                2px 2px 0px #2d1b69,
+                3px 3px 0px rgba(124, 58, 237, 0.3);
+            border-style: inset;
         }
 
         button:disabled {
@@ -147,10 +236,11 @@
             text-align: center;
             display: none;
             padding: 16px;
-            background: rgba(124, 58, 237, 0.08);
-            border-radius: 12px;
-            border: 1px solid rgba(124, 58, 237, 0.15);
-            font-weight: 500;
+            background: white;
+            border: 2px dashed #7c3aed;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .loading-dots::after {
@@ -166,8 +256,8 @@
         }
 
         #loginBtn {
-            background: linear-gradient(135deg, #7c3aed, #8b5cf6);
-            font-weight: 600;
+            background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+            font-weight: bold;
         }
 
         #loginBtn i {
@@ -177,41 +267,49 @@
 
         .suggestions-label {
             font-size: 0.9em;
-            font-weight: 600;
+            font-weight: bold;
             color: #4b5563;
             margin-bottom: 12px;
             text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 5px;
         }
 
         .bubble-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
             margin-bottom: 25px;
+            padding: 20px;
+            border: 1px dotted #7c3aed;
+            background: rgba(124, 58, 237, 0.05);
         }
 
         .bubble-button {
-            padding: 10px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 20px;
+            padding: 14px 20px;
+            border: 2px solid #2d1b69;
+            border-style: ridge;
             background: white;
             color: #4b5563;
-            font-size: 0.85em;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
+            font-size: 0.9em;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: none;
-            width: auto;
-            flex: 0 1 auto;
+            transition: all 0.1s ease;
+            box-shadow: 2px 2px 0px #e5e7eb;
+            width: 100%;
+            text-transform: none;
+            letter-spacing: 0;
         }
 
         .bubble-button:hover {
             border-color: #7c3aed;
             color: #7c3aed;
-            background: rgba(124, 58, 237, 0.05);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+            background: rgba(124, 58, 237, 0.1);
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px #7c3aed;
         }
 
         .bubble-button span {
@@ -226,12 +324,13 @@
         }
 
         #chatHistory {
-            max-height: 350px;
+            max-height: 450px;
             overflow-y: auto;
-            padding: 16px;
+            padding: 24px;
             background: #f9fafb;
-            border-radius: 16px;
-            border: 1px solid #e5e7eb;
+            border: 2px solid #2d1b69;
+            border-style: inset;
+            font-family: 'Courier New', monospace;
         }
 
         #chatHistory:empty {
@@ -239,38 +338,51 @@
         }
 
         #chatHistory::-webkit-scrollbar {
-            width: 6px;
+            width: 12px;
         }
 
         #chatHistory::-webkit-scrollbar-track {
             background: #f3f4f6;
-            border-radius: 3px;
+            border: 1px solid #d1d5db;
         }
 
         #chatHistory::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 3px;
+            background: #7c3aed;
+            border: 1px solid #2d1b69;
         }
 
         #chatHistory::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
+            background: #6d28d9;
         }
 
         .chat-message {
             margin-bottom: 12px;
             padding: 12px 16px;
-            border-radius: 16px;
+            border: 2px solid;
             line-height: 1.5;
             font-size: 0.9em;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Courier New', monospace;
+            position: relative;
         }
 
         .user-message {
-            background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+            background: #7c3aed;
             color: white !important;
-            margin-left: 15%;
+            margin-left: 30%;
             text-align: right;
-            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+            border-color: #2d1b69;
+            box-shadow: 3px 3px 0px rgba(45, 27, 105, 0.3);
+        }
+
+        .user-message::before {
+            content: "USER>";
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            font-size: 10px;
+            color: #a855f7;
+            background: white;
+            padding: 0 5px;
         }
 
         .user-message p {
@@ -279,9 +391,21 @@
 
         .assistant-message {
             background: white;
-            border: 1px solid #e5e7eb;
-            margin-right: 15%;
+            border: 2px solid #2d1b69;
+            border-style: groove;
+            margin-right: 30%;
             color: #374151;
+        }
+
+        .assistant-message::before {
+            content: "AI>";
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            font-size: 10px;
+            color: #7c3aed;
+            background: white;
+            padding: 0 5px;
         }
 
         .assistant-message h1,
@@ -289,7 +413,10 @@
         .assistant-message h3 {
             color: #2d1b69;
             margin: 16px 0 8px 0;
-            font-weight: 600;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px dashed #7c3aed;
+            padding-bottom: 4px;
         }
 
         .assistant-message h1 { font-size: 1.3em; }
@@ -313,51 +440,61 @@
         }
 
         .assistant-message code {
-            background: rgba(124, 58, 237, 0.08);
+            background: rgba(124, 58, 237, 0.1);
             padding: 2px 6px;
-            border-radius: 4px;
+            border: 1px solid #7c3aed;
             font-size: 0.9em;
             color: #7c3aed;
+            font-family: 'Courier New', monospace;
         }
 
         .assistant-message pre {
-            background: #f3f4f6;
+            background: #2d1b69;
+            color: #1db954;
             padding: 12px;
-            border-radius: 8px;
+            border: 2px solid #7c3aed;
             overflow-x: auto;
             margin: 8px 0;
+            font-family: 'Courier New', monospace;
         }
 
         .assistant-message pre code {
             background: none;
             padding: 0;
-            color: #374151;
+            color: #1db954;
+            border: none;
         }
 
         .thinking-text {
             font-size: 0.8em;
             color: #9ca3af;
-            font-style: italic;
+            font-style: normal;
             margin-bottom: 6px;
             padding: 6px 8px;
-            background: rgba(156, 163, 175, 0.1);
-            border-radius: 8px;
-            animation: fadeIn 0.3s ease-in;
+            background: white;
+            border: 1px dotted #9ca3af;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .tool-call {
             font-size: 0.85em;
             color: #7c3aed;
-            font-weight: 500;
+            font-weight: bold;
             margin: 4px 0;
             padding-left: 20px;
             position: relative;
         }
 
         .tool-call::before {
-            content: '⚡';
+            content: '>';
             position: absolute;
             left: 0;
+            animation: blink 0.5s ease-in-out infinite;
         }
 
         @keyframes fadeIn {
@@ -366,17 +503,15 @@
         }
 
         .final-response {
-            animation: slideIn 0.4s ease-out;
+            animation: typewriter 0.4s steps(20) forwards;
         }
 
-        @keyframes slideIn {
+        @keyframes typewriter {
             from { 
-                opacity: 0; 
-                transform: translateX(-10px);
+                width: 0;
             }
             to { 
-                opacity: 1; 
-                transform: translateX(0);
+                width: 100%;
             }
         }
 
@@ -387,18 +522,20 @@
         }
 
         #newChatBtn {
-            background: transparent;
+            background: white;
             color: #7c3aed;
-            border: 2px solid #7c3aed;
+            border: 3px solid #7c3aed;
+            border-style: dotted;
             margin-bottom: 16px;
             font-size: 0.9em;
             padding: 10px 20px;
             box-shadow: none;
+            text-transform: uppercase;
         }
 
         #newChatBtn:hover {
-            background: rgba(124, 58, 237, 0.05);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+            background: rgba(124, 58, 237, 0.1);
+            border-style: solid;
         }
 
         .footer-info {
@@ -406,12 +543,14 @@
             text-align: center;
             font-size: 0.8em;
             color: #9ca3af;
+            border-top: 1px dashed #e5e7eb;
+            padding-top: 16px;
         }
 
         .footer-info a {
             color: #7c3aed;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: bold;
         }
 
         .footer-info a:hover {
@@ -425,13 +564,27 @@
             margin-top: 16px;
             padding: 8px;
             background: #f9fafb;
-            border-radius: 8px;
+            border: 1px dotted #d1d5db;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                max-width: 700px;
+                padding: 40px;
+            }
+            
+            .bubble-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 768px) {
             .container {
+                max-width: 500px;
                 padding: 24px 20px;
                 margin: 10px;
+                border-width: 2px;
             }
 
             h2 {
@@ -441,6 +594,10 @@
             .bubble-button {
                 font-size: 0.8em;
                 padding: 8px 14px;
+            }
+            
+            .bubble-buttons {
+                grid-template-columns: 1fr;
             }
 
             .user-message,
