@@ -2,6 +2,10 @@
 
 An AI-powered Spotify playlist assistant that uses the Agno framework to orchestrate multiple AI agents. The system creates personalized playlists based on natural language descriptions of mood and preferences.
 
+## DEMO
+
+https://github.com/user-attachments/assets/270b5018-a099-4517-bb68-4bc9de6d682b
+
 ## 🎵 Features
 
 - **Natural Language Playlist Creation**: Describe your mood, genre preferences, or situation to create custom playlists
