@@ -1,4 +1,4 @@
-# Spotify Playlist Assistant with Agno
+# Spotify Playlist Assistant
 
 An AI-powered Spotify playlist assistant that uses the Agno framework to orchestrate multiple AI agents. The system creates personalized playlists based on natural language descriptions of mood and preferences.
 
