@@ -4,10 +4,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Common Development Commands
 
-### Starting the Application
+### Docker Development (Recommended)
 ```bash
-# Start PostgreSQL database
+# Start both database and FastAPI application
 docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Rebuild application after code changes
+docker-compose up --build -d app
+
+# Stop all services
+docker-compose down
+
+# Access the application
+# Web interface: http://localhost:8000/static/index3.html
+# API docs: http://localhost:8000/docs
+```
+
+### Local Development (Alternative)
+```bash
+# Start PostgreSQL database only
+docker-compose up -d db
 
 # Install dependencies (preferred method)
 uv sync
@@ -15,7 +34,7 @@ uv sync
 # Alternative dependency installation
 pip install -r requirements.txt
 
-# Start the FastAPI server
+# Start the FastAPI server locally
 uvicorn api.main:app --reload
 
 # Access the application
@@ -28,7 +47,7 @@ The application requires a `.env` file with the following variables:
 - `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_DEPLOYMENT_NAME` - Azure OpenAI configuration
 - `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` - Spotify OAuth credentials
 - `SERPER_API_KEY` - Web search functionality
-- `POSTGRES_URL` - Database connection (defaults to `postgresql://ailuke:mypassword123456@localhost:5432/aimemory`)
+- `POSTGRES_URL` - Database connection (auto-configured in Docker, defaults to `postgresql://postgres:postgres@localhost:5432/postgres` for local development)
 
 ## Architecture Overview
 

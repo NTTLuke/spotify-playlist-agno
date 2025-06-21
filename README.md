@@ -38,16 +38,16 @@ An AI-powered Spotify playlist assistant that uses the Agno framework to orchest
 
 ### Prerequisites
 
-- Python 3.12+
-- Docker & Docker Compose (for PostgreSQL database)
+- Docker & Docker Compose (required for both deployment methods)
 - Spotify Developer Account
 - Azure OpenAI Account
 - Serper API Key (for web search)
+- Python 3.12+ (only for local development)
 
 ### 1. Clone the Repository
 
 ```bash
-git clone XXXX
+git clone https://github.com/NTTLuke/spotify-playlist-agno.git
 cd spotify-playlist-agno
 ```
 
@@ -79,7 +79,56 @@ cd spotify-playlist-agno
    SERPER_API_KEY=your_serper_api_key
    ```
 
-### 3. Install Dependencies
+### 3. Choose Your Deployment Method
+
+## 🐳 Docker Deployment (Recommended)
+
+The easiest way to run the application is using Docker Compose, which handles both the database and the FastAPI application.
+
+### Start the Application
+
+```bash
+# Start both database and FastAPI application
+docker-compose up -d
+```
+
+This command will:
+- Build the FastAPI application container
+- Start the PostgreSQL database
+- Configure networking between services
+- Set up all environment variables automatically
+
+### Managing the Application
+
+```bash
+# View application logs
+docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f app
+docker-compose logs -f db
+
+# Rebuild application after code changes
+docker-compose up --build -d app
+
+# Stop all services
+docker-compose down
+
+# Stop and remove all data (including database)
+docker-compose down -v
+```
+
+### Access the Application
+- **Web Interface**: http://localhost:8000/
+- **API Documentation**: http://localhost:8000/docs
+
+---
+
+## 🔧 Local Development (Alternative)
+
+If you prefer to run the FastAPI application locally while using Docker only for the database:
+
+### Install Dependencies
 
 Using `uv` (recommended):
 ```bash
@@ -92,23 +141,21 @@ Or using `pip`:
 pip install -r requirements.txt
 ```
 
-### 4. Start the Database
+### Start the Database Only
 
 ```bash
-docker-compose up -d
+docker-compose up -d db
 ```
 
-This starts a PostgreSQL container with the default credentials. The database will be created automatically.
-
-### 5. Run the Application
+### Run the Application Locally
 
 ```bash
 uvicorn api.main:app --reload
 ```
 
-The application will be available at:
-- Web Interface: http://localhost:8000/static/index3.html
-- API Documentation: http://localhost:8000/docs
+### Access the Application
+- **Web Interface**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
 
 ## 🔧 Configuration
 
@@ -150,7 +197,7 @@ The application will be available at:
 
 ### Web Interface
 
-1. Open http://localhost:8000/static/index3.html
+1. Open http://localhost:8000
 2. Click "Login with Spotify" to authenticate
 3. Start chatting with the AI assistant
 4. Use natural language to describe the playlist you want:
